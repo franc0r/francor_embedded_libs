@@ -6,7 +6,7 @@
     {
       "label": "Build & Run rosserial stm32f4 tests",
       "type": "shell",
-      "command": "wsl cmake .. && wsl make -j 14 && wsl ctest",
+      "command": "wsl cmake .. && wsl make -j 14 && wsl ../bin/rosserial_stm32f4_test_V0.1",
       "options": {
         "cwd": "Tests/rosserial/build"
       },

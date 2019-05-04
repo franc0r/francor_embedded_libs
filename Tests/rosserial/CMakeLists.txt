@@ -11,7 +11,7 @@ cmake_minimum_required(VERSION 3.0.0)
 project(rosserial_stm32f4_test VERSION 0.1)
 
 # Enable testing
-enable_testing()
+#enable_testing()
 
 # Output directory
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
@@ -70,4 +70,4 @@ target_link_libraries(${TARGET_NAME} CppUTest)
 target_link_libraries(${TARGET_NAME} CppUTestExt)
 
 # Add test
-add_test(NAME rosserial_stm32f4_test COMMAND ${TARGET_NAME})
+#add_test(NAME rosserial_stm32f4_test COMMAND ${TARGET_NAME})
