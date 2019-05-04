@@ -66,7 +66,8 @@ namespace ros
 {
 
 /* Hardware Configuration --------------------------------------------------------*/
-constexpr uint16_t  STM_HW_BUF_SIZE = 512u; //!< Size of tx/rx buffer
+constexpr uint16_t  STM_HW_BUF_SIZE = 512u;   //!< Size of tx/rx buffer
+constexpr uint32_t  STM_HW_DEF_BAUD = 57600u; //!< Default rosserial baudrate
 
 extern UART_HandleTypeDef huart2; //!< Standard serial interface of nucleo boards
 /* -------------------------------------------------------------------------------*/
@@ -85,7 +86,12 @@ class STMHardware
      */
     STMHardware(void) :
     _serial(huart2),
-    _baud(57600)
+    _baud(STM_HW_DEF_BAUD),
+    _tx_buffer(),
+    _tx_size(0u),
+    _rx_buffer(),
+    _rx_read_pos(0u),
+    _rx_size(0u)
     {
 
     }
@@ -95,7 +101,20 @@ class STMHardware
      */
     void init()
     {
+      // Set baudrate from serial device
+      _baud = _serial.Init.BaudRate;
 
+      // Reset arrays
+      for(uint16_t idx = 0u; idx < STM_HW_BUF_SIZE; idx++)
+      {
+        _tx_buffer[0] = 0u;
+        _rx_buffer[0] = 0u;
+      }
+
+      // Reset values
+      _tx_size      = 0;
+      _rx_read_pos  = 0;
+      _rx_size      = 0;
     }
 
     /**
@@ -106,7 +125,17 @@ class STMHardware
      */
     int read()
     {
-      return -1;
+      // Check if data is in buffer
+      if(0u == _rx_size)
+      {
+        return -1;
+      }
+
+      // Read data from buffer
+      const int value = _rx_buffer[_rx_read_pos++];
+      _rx_size--;
+      
+      return value;
     }
 
     /**
@@ -120,7 +149,9 @@ class STMHardware
 
     }
 
+#ifndef BUILD_TESTS
   protected:
+#endif
 
     UART_HandleTypeDef&   _serial; //!< Serial interface
     uint32_t              _baud;   //!< Baudrate

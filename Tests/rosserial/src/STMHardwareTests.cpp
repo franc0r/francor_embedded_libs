@@ -44,24 +44,104 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* Includes ----------------------------------------------------------------------*/
 #include <CppUTest/TestHarness.h>
+#include <cstring>
 #include "STMHardware.h"
 /* -------------------------------------------------------------------------------*/
 
+constexpr uint32_t ROSSERIAL_DEFAULT_BAUD = 57600u;
+
+extern UART_HandleTypeDef huart2;
 
 TEST_GROUP(STMHardware)
 {
   void setup()
   {
-
+    // Set baudrate to default rosserial
+    huart2.Init.BaudRate  = 57600u;
   }
 
   void teardown()
   {
 
   }
+
+  void checkValueReset()
+  {
+    CHECK(huart2.Instance == _hardware._serial.Instance);
+    CHECK(ros::STM_HW_DEF_BAUD == _hardware._baud);
+    CHECK(0u == _hardware._tx_size);
+    CHECK(0u == _hardware._rx_read_pos);
+    CHECK(0u == _hardware._rx_size);
+    
+    for(auto idx = 0u; idx < ros::STM_HW_BUF_SIZE; idx++)
+    {
+      CHECK(0u == _hardware._tx_buffer[idx]);
+      CHECK(0u == _hardware._rx_buffer[idx]);
+    }
+  }
+
+  ros::STMHardware  _hardware;
 };
 
 TEST(STMHardware, Constructor)
 {
-  CHECK(true);
+  checkValueReset();
+}
+
+TEST(STMHardware, Init)
+{
+  _hardware.init();
+
+  CHECK(ros::STM_HW_DEF_BAUD == _hardware._baud);
+}
+
+TEST(STMHardware, InitBaud115200)
+{
+ huart2.Init.BaudRate = 115200u;
+ _hardware.init();
+
+ CHECK(115200u == _hardware._baud); 
+}
+
+TEST(STMHardware, InitResetValue)
+{
+  // Set values
+  _hardware._baud = 1234;
+  _hardware._tx_buffer[0] = 2;
+  _hardware._rx_buffer[0] = 3;
+  _hardware._rx_read_pos = 5;
+  _hardware._rx_size = 45;
+
+  _hardware.init();
+
+  checkValueReset();
+}
+
+TEST(STMHardware, ReadNoData)
+{
+  _hardware.init();
+
+  CHECK(0 == _hardware._rx_size);
+  CHECK(-1 == _hardware.read());
+}
+
+TEST(STMHardware, ReadData)
+{
+  _hardware.init();
+
+  const char      msg[]     = "Hello World!";
+  const uint16_t  msg_size  = strlen(msg);
+
+  // Copy data to rx buffer
+  _hardware._rx_size = msg_size;
+  memcpy(_hardware._rx_buffer, msg, msg_size);
+
+  // Read data
+  for(auto idx = 0u; idx < msg_size; idx++)
+  {
+    CHECK(idx == _hardware._rx_read_pos);
+    CHECK(msg[idx] == _hardware.read());
+  }
+
+  CHECK(0 == _hardware._rx_size);
 }
