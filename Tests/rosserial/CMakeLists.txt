@@ -22,6 +22,7 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/../Device/STM32F446RE/Drivers/STM32F4xx_HAL_Driver/Inc
   ${CMAKE_SOURCE_DIR}/../Device/STM32F446RE/Sim
   ${CMAKE_SOURCE_DIR}/../Device/STM32F446RE/Inc
+  ${CMAKE_SOURCE_DIR}/../../Middlewares/rosserial
 )
 
 # Add source files
@@ -48,6 +49,7 @@ AUX_SOURCE_DIRECTORY(
 
 # Add definitions
 add_definitions(
+  -DSTM32F4
   -DSTM32F446xx
   -DUSE_HAL_DRIVER
   -DBUILD_TESTS
