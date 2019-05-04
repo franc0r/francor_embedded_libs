@@ -38,7 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * @version 0.1
  * @date 2019-05-04
  * 
- * @copyright Copyright (c) 2019
+ * @copyright Copyright (c) 2019 Franconian Open Robotics
  * 
  */
 
