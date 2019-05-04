@@ -6,12 +6,22 @@
     {
       "label": "Build & Run rosserial stm32f4 tests",
       "type": "shell",
-      "command": "wsl cmake .. && wsl ctest",
+      "command": "wsl cmake .. && wsl make -j 14 && wsl ctest",
       "options": {
         "cwd": "Tests/rosserial/build"
       },
       "group": "build",
       "problemMatcher": []
+    },
+    {
+      "label": "Clean rosserial stm32f4 tests",
+      "type": "shell",
+      "command": "wsl rm -r build/*",
+      "options": {
+        "cwd": "Tests/rosserial"
+      },
+      "group": "build",
+      "problemMatcher": []
     }
   ]
-}
+}#
