@@ -1,0 +1,17 @@
+{
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build & Run rosserial stm32f4 tests",
+      "type": "shell",
+      "command": "wsl cmake .. && wsl ctest",
+      "options": {
+        "cwd": "Tests/rosserial/build"
+      },
+      "group": "build",
+      "problemMatcher": []
+    }
+  ]
+}
