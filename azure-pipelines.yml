@@ -16,3 +16,4 @@ steps:
     workingDirectory: 'Tests/rosserial/build'
     cmakeArgs: '..'
 - script: '(cd Tests/rosserial/build && make)'
+- script: 'Tests/rosserial/bin/rosserial_stm32f4_test_V0.1'
