@@ -61,10 +61,12 @@ static void MX_USART2_UART_Init(void);
 
 /* USER CODE END 0 */
 
+ #ifndef BUILD_TESTS
 /**
   * @brief  The application entry point.
   * @retval int
   */
+
 int main(void)
 {
   /* USER CODE BEGIN 1 */
@@ -104,6 +106,7 @@ int main(void)
   }
   /* USER CODE END 3 */
 }
+#endif
 
 /**
   * @brief System Clock Configuration
