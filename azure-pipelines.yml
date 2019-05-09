@@ -14,4 +14,4 @@ steps:
   inputs:
     workingDirectory: 'Tests/rosserial/build'
     cmakeArgs: '..'
-- script: 'make'
+- script: '(cd Tests/rosserial/build && make)'
