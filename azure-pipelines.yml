@@ -14,3 +14,9 @@ steps:
   inputs:
     workingDirectory: 'Tests/rosserial/build'
     cmakeArgs: '..'
+- task: Bash@3
+  inputs:
+    filePath: '/usr/bin/make'
+    workingDirectory: 'Tests/rosserial/build'
+    noProfile: false
+    noRc: false
