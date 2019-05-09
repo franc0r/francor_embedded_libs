@@ -145,3 +145,8 @@ TEST(STMHardware, ReadData)
 
   CHECK(0 == _hardware._rx_size);
 }
+
+TEST(STMHardware, FailTest)
+{
+  FAIL("This Tests FAILS!");
+}
