@@ -278,6 +278,68 @@ TEST(QVariable, MultiTwoQValsRawByMultiEq)
   CHECK_EQUAL(31.6875, static_cast<double>(var1));
 }
 
+/**
+ * Test if division of two values by / works correctly
+ */
+TEST(QVariable, DivideTwoQVals)
+{
+  QVariable<int32_t, 4>  var1(2.5), var2(-12.7);
+
+  CHECK_EQUAL(40, static_cast<int32_t>(var1));
+  CHECK_EQUAL(-203, static_cast<int32_t>(var2));
+
+  QVariable<int32_t, 4> res = var1 / var2;
+
+  CHECK_EQUAL(-3, static_cast<int32_t>(res));
+  CHECK_EQUAL(-0.1875, static_cast<double>(res));
+}
+
+/**
+ * Test if division of two values by /= works correctly
+ */
+TEST(QVariable, DivideTwoQValsByDivideEq)
+{
+  QVariable<int32_t, 4>  var1(2.5), var2(12.7);
+
+  CHECK_EQUAL(40, static_cast<int32_t>(var1));
+  CHECK_EQUAL(203, static_cast<int32_t>(var2));
+
+  var1 /= var2;
+
+  CHECK_EQUAL(3, static_cast<int32_t>(var1));
+  CHECK_EQUAL(0.1875, static_cast<double>(var1));
+}
+
+/**
+ * Test if division of raw value by / works correctly
+ */
+TEST(QVariable, DivideTwoQValsRaw)
+{
+  QVariable<int32_t, 4>  var1(2.5);
+
+  CHECK_EQUAL(40u, static_cast<int32_t>(var1));
+
+  QVariable<int32_t, 4> res = var1 / -203;
+
+  CHECK_EQUAL(-3, static_cast<int32_t>(res));
+  CHECK_EQUAL(-0.1875, static_cast<double>(res));
+}
+
+/**
+ * Test if division of raw value by /= works correctly
+ */
+TEST(QVariable, DivideTwoQValsRawByDivisionEq)
+{
+  QVariable<int32_t, 4>  var1(2.5);
+
+  CHECK_EQUAL(40u, static_cast<int32_t>(var1));
+
+  var1 /= 203u;
+
+  CHECK_EQUAL(3, static_cast<int32_t>(var1));
+  CHECK_EQUAL(0.1875, static_cast<double>(var1));
+}
+
  /**
   * @}
   */ // Tests
