@@ -48,6 +48,13 @@ public:
 
   /* Get and typecast operators */
 
+  /**
+   * @brief Get the fixed point position
+   * 
+   * @return const std::size_t Q value 2^-Q
+   */
+  static const std::size_t getQ(void) {return Q;}
+
   /** \brief Operator: Get raw value */
   operator const DataType() const {return _raw_value;}
 
@@ -56,7 +63,7 @@ public:
 
   /* Arithmetic operators */
   
-  QVariable operator + (const DataType rhs) {
+  QVariable operator + (const DataType rhs) const {
     QVariable res;
     res._raw_value = this->_raw_value + rhs;
     return res;
@@ -67,7 +74,7 @@ public:
     return *this;
   }
 
-  QVariable operator - (const DataType rhs) {
+  QVariable operator - (const DataType rhs) const {
     QVariable res;
     res._raw_value = this->_raw_value - rhs;
     return res;
@@ -78,7 +85,7 @@ public:
     return *this;
   }
 
-  QVariable operator * (const DataType rhs) {
+  QVariable operator * (const DataType rhs) const {
     QVariable res;
     res._raw_value = (this->_raw_value * rhs) >> Q;
     return res;
@@ -90,7 +97,7 @@ public:
     return *this;
   }
 
-  QVariable operator / (const DataType rhs) {
+  QVariable operator / (const DataType rhs) const {
     QVariable res;
     res._raw_value = (this->_raw_value << Q) / rhs;
     return res;

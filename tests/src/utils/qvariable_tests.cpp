@@ -92,6 +92,20 @@ TEST(QVariable, GetFPValue)
 }
 
 /**
+ * Test if q value is returned correctly
+ */
+TEST(QVariable, GetQValue)
+{
+  QVariable<uint32_t, 8>  var1(2.134);
+  QVariable<uint32_t, 6>  var2(5.134);
+  QVariable<uint32_t, 2>  var3(2.134);
+
+  CHECK_EQUAL(8u, var1.getQ());
+  CHECK_EQUAL(6u, var2.getQ());
+  CHECK_EQUAL(2u, var3.getQ());
+}
+
+/**
  * Test if addition of two values by + works correctly
  */
 TEST(QVariable, AddTwoQVals)
