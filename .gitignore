@@ -1,1 +1,3 @@
 .vscode/ipch
+tests/bin/*
+tests/build/*
