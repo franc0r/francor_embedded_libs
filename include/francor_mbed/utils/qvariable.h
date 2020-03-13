@@ -78,6 +78,19 @@ public:
     return *this;
   }
 
+  QVariable operator * (const DataType rhs) {
+    QVariable res;
+    res._raw_value = (this->_raw_value * rhs) >> Q;
+    return res;
+  }
+
+  QVariable& operator *= (const DataType rhs) {
+    this->_raw_value *= rhs;
+    this->_raw_value = (this->_raw_value >> Q);
+    return *this;
+  }
+
+
   
 
 #ifndef BUILD_TESTS

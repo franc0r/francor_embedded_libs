@@ -173,7 +173,7 @@ TEST(QVariable, SubstTwoQVals)
 /**
  * Test if substraction of two values by -= works correctly
  */
-TEST(QVariable, SubstTwoQValsByAddEq)
+TEST(QVariable, SubstTwoQValsBySubstEq)
 {
   QVariable<int32_t, 4>  var1(2.5), var2(12.7);
 
@@ -204,7 +204,7 @@ TEST(QVariable, SubstTwoQValsRaw)
 /**
  * Test if substraction of raw value by -= works correctly
  */
-TEST(QVariable, SubstTwoQValsRawByAddEq)
+TEST(QVariable, SubstTwoQValsRawBySubstEq)
 {
   QVariable<int32_t, 4>  var1(2.5);
 
@@ -214,6 +214,68 @@ TEST(QVariable, SubstTwoQValsRawByAddEq)
 
   CHECK_EQUAL(-163, static_cast<int32_t>(var1));
   CHECK_EQUAL(-10.1875, static_cast<double>(var1));
+}
+
+/**
+ * Test if multiplication of two values by * works correctly
+ */
+TEST(QVariable, MultiTwoQVals)
+{
+  QVariable<int32_t, 4>  var1(2.5), var2(-12.7);
+
+  CHECK_EQUAL(40, static_cast<int32_t>(var1));
+  CHECK_EQUAL(-203, static_cast<int32_t>(var2));
+
+  QVariable<int32_t, 4> res = var1 * var2;
+
+  CHECK_EQUAL(-508, static_cast<int32_t>(res));
+  CHECK_EQUAL(-31.75, static_cast<double>(res));
+}
+
+/**
+ * Test if multiplication of two values by *= works correctly
+ */
+TEST(QVariable, MultiTwoQValsByMultiEq)
+{
+  QVariable<int32_t, 4>  var1(2.5), var2(12.7);
+
+  CHECK_EQUAL(40, static_cast<int32_t>(var1));
+  CHECK_EQUAL(203, static_cast<int32_t>(var2));
+
+  var1 *= var2;
+
+  CHECK_EQUAL(507, static_cast<int32_t>(var1));
+  CHECK_EQUAL(31.6875, static_cast<double>(var1));
+}
+
+/**
+ * Test if multiplication of raw value by * works correctly
+ */
+TEST(QVariable, MultiTwoQValsRaw)
+{
+  QVariable<int32_t, 4>  var1(2.5);
+
+  CHECK_EQUAL(40u, static_cast<int32_t>(var1));
+
+  QVariable<int32_t, 4> res = var1 * -203;
+
+  CHECK_EQUAL(-508, static_cast<int32_t>(res));
+  CHECK_EQUAL(-31.75, static_cast<double>(res));
+}
+
+/**
+ * Test if multiplication of raw value by *= works correctly
+ */
+TEST(QVariable, MultiTwoQValsRawByMultiEq)
+{
+  QVariable<int32_t, 4>  var1(2.5);
+
+  CHECK_EQUAL(40u, static_cast<int32_t>(var1));
+
+  var1 *= 203u;
+
+  CHECK_EQUAL(507, static_cast<int32_t>(var1));
+  CHECK_EQUAL(31.6875, static_cast<double>(var1));
 }
 
  /**
