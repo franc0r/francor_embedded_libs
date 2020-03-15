@@ -89,6 +89,25 @@ public:
     _raw_value = v;
   }
 
+  /**
+   * @brief Converts another fixed point value to this representation
+   * 
+   * @tparam T QVariable class
+   * @param v Variable
+   */
+  template<typename T>
+  void convert(const T v)
+  {
+    if(_num_frac_bits >= v._num_frac_bits) 
+    {
+      _raw_value = static_cast<DataType>(v._raw_value) << (_num_frac_bits - v._num_frac_bits);
+    }
+    else
+    {
+      _raw_value = static_cast<DataType>(v._raw_value) >> (v._num_frac_bits - _num_frac_bits);
+    }
+  }
+
   /* Get and typecast operators */
 
   /**
@@ -96,7 +115,7 @@ public:
    * 
    * @return const std::size_t Number of fractional bits
    */
-  static const std::size_t getNumFracBits(void) {return NumFracBits;}
+  static const std::size_t getNumFracBits(void) {return _num_frac_bits;}
 
   /**
    * @brief Get the precision of the fixed point value
@@ -118,6 +137,13 @@ public:
 
   /** \brief Operator: Get floating point value double */
   operator const double() const {return static_cast<double>(_raw_value) * _precision;}
+
+  /** \brief Operator: Set fxp value from another fxp variable */
+  QVariable& operator = (QVariable const v)
+  {
+    _raw_value = v._raw_value;
+    return *this;
+  }
 
   /* Arithmetic operators between FXP variables */
 
@@ -151,6 +177,9 @@ private:
 
   /** \brief Calculated accuracy of fixed point value */
   static constexpr double _precision = (1.0 / static_cast<double>(1 << NumFracBits));
+
+  /** \brief Store number of fractional bits */
+  static constexpr std::size_t _num_frac_bits = NumFracBits;
 };
 
  /**

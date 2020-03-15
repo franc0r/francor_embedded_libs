@@ -112,6 +112,38 @@ TEST(QVariable, GetNumFracBits)
 }
 
 /**
+ * Test if conversion from one fxp precision to another value works
+ */
+TEST(QVariable, ConvertFXPValues)
+{
+  QVariable<uint32_t, 8>  var1(2.134);
+  QVariable<uint32_t, 6>  var2(5.125);
+
+  CHECK_EQUAL(546, var1.getRawValue());
+  CHECK_EQUAL(328, var2.getRawValue());
+
+  var1.convert(var2);
+  CHECK_EQUAL(1312, var1.getRawValue());
+  CHECK_EQUAL(5.125, static_cast<double>(var1));
+}
+
+/**
+ * Test if assignment works
+ */
+TEST(QVariable, AssignFXPValue)
+{
+  QVariable<uint32_t, 8>  var1(2.134);
+  QVariable<uint32_t, 8>  var2(5.125);
+
+  CHECK_EQUAL(546, var1.getRawValue());
+  CHECK_EQUAL(1312, var2.getRawValue());
+
+  var1 = var2;
+
+  CHECK_EQUAL(1312, var1.getRawValue());
+}
+
+/**
  * Test if addition of two fxp values works correctly
  */
 TEST(QVariable, AddTwoFXPValues1)
