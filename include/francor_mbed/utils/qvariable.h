@@ -55,7 +55,7 @@ namespace francor_mbed
  * 
  * 
  */
-template<typename DataType = std::uint32_t, std::size_t NumFracBits = 14>
+template<typename DataType = std::int32_t, std::size_t NumFracBits = 14>
 class QVariable
 {
 public:
@@ -63,9 +63,31 @@ public:
   /** \brief Default constructor */
   QVariable() {}
 
-  /** \brief Create Q-value from floating point value */
+  /**
+   * @brief Construct a new q-variable with raw value
+   * 
+   * @param v Value of variable in raw fixed point representation
+   */
+  QVariable(const DataType& v) :
+    _raw_value(v) {}
+
+  /**
+   * @brief Construct a new q-variable with floating point value
+   * 
+   * @param v Value of variable in floating point value
+   */
   QVariable(const double v) :
-    _raw_value(static_cast<DataType>(v / _accuracy)) {}
+    _raw_value(static_cast<DataType>(v / _precision)) {}
+
+  /**
+   * @brief Set the raw fixed point value
+   * 
+   * @param v Raw fixed point value to set
+   */
+  void setRawValue(const DataType v)
+  {
+    _raw_value = v;
+  }
 
   /* Get and typecast operators */
 
@@ -76,61 +98,48 @@ public:
    */
   static const std::size_t getNumFracBits(void) {return NumFracBits;}
 
-  /** \brief Operator: Get raw value */
-  operator const DataType() const {return _raw_value;}
+  /**
+   * @brief Get the precision of the fixed point value
+   * 
+   * @return const double Precision as floating point value
+   */
+  static const double getPrecision(void) {return _precision;}
 
-  /** \brief Operator: Get floating point value */
-  operator const double() const {return static_cast<double>(_raw_value) * _accuracy;}
+  /**
+   * @brief Get the raw fixed point value of the variable
+   * 
+   * @return const DataType Raw value of variable
+   */
+  const DataType getRawValue(void) const {return _raw_value;}
 
-  /* Arithmetic operators */
-  
-  QVariable operator + (const DataType rhs) const {
-    QVariable res;
-    res._raw_value = this->_raw_value + rhs;
-    return res;
+  /** \brief Operator: Get floating point value float */
+  operator const float() const {return static_cast<float>(_raw_value) 
+                                * static_cast<float>(_precision);}
+
+  /** \brief Operator: Get floating point value double */
+  operator const double() const {return static_cast<double>(_raw_value) * _precision;}
+
+  /* Arithmetic operators between FXP variables */
+
+  QVariable operator + (QVariable const& rhs) const
+  {
+    return QVariable(this->_raw_value + rhs._raw_value);
+  } 
+
+  QVariable operator - (QVariable const& rhs) const
+  {
+    return QVariable(this->_raw_value - rhs._raw_value);
   }
 
-  QVariable& operator += (const DataType rhs) {
-    this->_raw_value += rhs;
-    return *this;
+  QVariable operator * (QVariable const& rhs) const
+  {
+    return QVariable((this->_raw_value * rhs._raw_value) >> NumFracBits);
   }
 
-  QVariable operator - (const DataType rhs) const {
-    QVariable res;
-    res._raw_value = this->_raw_value - rhs;
-    return res;
+  QVariable operator / (QVariable const& rhs) const
+  {
+    return QVariable((this->_raw_value << NumFracBits) / rhs._raw_value);
   }
-
-  QVariable& operator -= (const DataType rhs) {
-    this->_raw_value -= rhs;
-    return *this;
-  }
-
-  QVariable operator * (const DataType rhs) const {
-    QVariable res;
-    res._raw_value = (this->_raw_value * rhs) >> NumFracBits;
-    return res;
-  }
-
-  QVariable& operator *= (const DataType rhs) {
-    this->_raw_value *= rhs;
-    this->_raw_value = (this->_raw_value >> NumFracBits);
-    return *this;
-  }
-
-  QVariable operator / (const DataType rhs) const {
-    QVariable res;
-    res._raw_value = (this->_raw_value << NumFracBits) / rhs;
-    return res;
-  }
-
-  QVariable& operator /= (const DataType rhs) {
-    this->_raw_value = this->_raw_value << NumFracBits;
-    this->_raw_value /= rhs;
-    return *this;
-  }
-
-
   
 
 #ifndef BUILD_TESTS
@@ -141,7 +150,7 @@ private:
   DataType  _raw_value  = 0;
 
   /** \brief Calculated accuracy of fixed point value */
-  static constexpr double _accuracy = (1.0 / static_cast<double>(1 << NumFracBits));
+  static constexpr double _precision = (1.0 / static_cast<double>(1 << NumFracBits));
 };
 
  /**

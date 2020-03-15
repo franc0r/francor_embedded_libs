@@ -44,6 +44,12 @@ using namespace francor_mbed;
    }
  };
 
+const bool QVariableCheckResult(const double result, const double expected_result,
+                               const double precision) 
+{
+  return (abs(expected_result - result) <= precision);
+}
+
 /**
  * Test if the constructor initializes the variables correctly
  */
@@ -55,8 +61,8 @@ using namespace francor_mbed;
    CHECK_EQUAL(0u, var1._raw_value);
    CHECK_EQUAL(0u, var2._raw_value);
 
-   CHECK_EQUAL(0.00390625, var1._accuracy);
-   CHECK_EQUAL(0.0625, var2._accuracy);
+   CHECK_EQUAL(0.00390625, var1._precision);
+   CHECK_EQUAL(0.0625, var2._precision);
  }
 
 /**
@@ -70,20 +76,20 @@ TEST(QVariable, ConstructorDouble)
 }
 
 /**
- * Test if raw value is returned correctly
+ * Test if float is returned correctly
  */
-TEST(QVariable, GetRawValue)
+TEST(QVariable, GetFloatValue)
 {
-  QVariable<uint32_t, 8>  var1(2.134);
+  QVariable<int32_t, 8>  var1(-2.134);
 
-  const uint32_t raw_val = var1;
-  CHECK_EQUAL(546u, raw_val);
+  const float val = var1;
+  CHECK_EQUAL(-2.1328125f, val);
 }
 
 /**
- * Test if floating point value is returned correctly
+ * Test if double is returned correctly
  */
-TEST(QVariable, GetFPValue)
+TEST(QVariable, GetDoubleValue)
 {
   QVariable<uint32_t, 8>  var1(2.134);
 
@@ -92,9 +98,9 @@ TEST(QVariable, GetFPValue)
 }
 
 /**
- * Test if q value is returned correctly
+ * Test if number of fractional is returned correctly
  */
-TEST(QVariable, GetQValue)
+TEST(QVariable, GetNumFracBits)
 {
   QVariable<uint32_t, 8>  var1(2.134);
   QVariable<uint32_t, 6>  var2(5.134);
@@ -106,252 +112,139 @@ TEST(QVariable, GetQValue)
 }
 
 /**
- * Test if addition of two values by + works correctly
+ * Test if addition of two fxp values works correctly
  */
-TEST(QVariable, AddTwoQVals)
+TEST(QVariable, AddTwoFXPValues1)
 {
-  QVariable<uint32_t, 4>  var1(2.5), var2(12.7);
+  QVariable<int32_t, 8> var1(2.56), var2(2.44);
 
-  CHECK_EQUAL(40u, static_cast<uint32_t>(var1));
-  CHECK_EQUAL(203u, static_cast<uint32_t>(var2));
+  QVariable<int32_t, 8> res = var1 + var2;
 
-  QVariable<uint32_t, 4> res = var1 + var2;
+  CHECK_EQUAL(655, var1.getRawValue());
+  CHECK_EQUAL(624, var2.getRawValue());
 
-  CHECK_EQUAL(243, static_cast<uint32_t>(res));
-  CHECK_EQUAL(15.1875, static_cast<double>(res));
+  CHECK_EQUAL(1279, res.getRawValue());
+  
+  CHECK_EQUAL(true, QVariableCheckResult(double(res), 5.0, res.getPrecision()));
 }
 
 /**
- * Test if addition of two values by += works correctly
+ * Test if addition of two fxp values works correctly
  */
-TEST(QVariable, AddTwoQValsByAddEq)
+TEST(QVariable, AddTwoFXPValues2)
 {
-  QVariable<uint32_t, 4>  var1(2.5), var2(12.7);
+  QVariable<int32_t, 8> var1(2.56), var2(-12.56);
 
-  CHECK_EQUAL(40u, static_cast<uint32_t>(var1));
-  CHECK_EQUAL(203u, static_cast<uint32_t>(var2));
+  QVariable<int32_t, 8> res = var1 + var2;
 
-  var1 += var2;
+  CHECK_EQUAL(655, var1.getRawValue());
+  CHECK_EQUAL(-3215, var2.getRawValue());
 
-  CHECK_EQUAL(243, static_cast<uint32_t>(var1));
-  CHECK_EQUAL(15.1875, static_cast<double>(var1));
+  CHECK_EQUAL(-2560, res.getRawValue());
+  
+  CHECK_EQUAL(true, QVariableCheckResult(double(res), -10.0, res.getPrecision()));
 }
 
 /**
- * Test if addition of raw value by + works correctly
+ * Test if substraction of two fxp values works correctly
  */
-TEST(QVariable, AddTwoQValsRaw)
+TEST(QVariable, SubsTwoFXPValues1)
 {
-  QVariable<uint32_t, 4>  var1(2.5);
+  QVariable<int32_t, 8> var1(152.985), var2(2.985);
 
-  CHECK_EQUAL(40u, static_cast<uint32_t>(var1));
+  QVariable<int32_t, 8> res = var1 - var2;
 
-  QVariable<uint32_t, 4> res = var1 + 203u;
+  CHECK_EQUAL(39164, var1.getRawValue());
+  CHECK_EQUAL(764, var2.getRawValue());
 
-  CHECK_EQUAL(243, static_cast<uint32_t>(res));
-  CHECK_EQUAL(15.1875, static_cast<double>(res));
+  CHECK_EQUAL(38400, res.getRawValue());
+  
+  CHECK_EQUAL(true, QVariableCheckResult(double(res), 150.0, res.getPrecision()));
 }
 
 /**
- * Test if addition of raw value by += works correctly
+ * Test if substraction of two fxp values works correctly
  */
-TEST(QVariable, AddTwoQValsRawByAddEq)
+TEST(QVariable, SubsTwoFXPValues2)
 {
-  QVariable<uint32_t, 4>  var1(2.5);
+  QVariable<int32_t, 8> var1(152.985), var2(-152.015);
 
-  CHECK_EQUAL(40u, static_cast<uint32_t>(var1));
+  QVariable<int32_t, 8> res = var1 - var2;
 
-  var1 += 203u;
+  CHECK_EQUAL(39164, var1.getRawValue());
+  CHECK_EQUAL(-38915, var2.getRawValue());
 
-  CHECK_EQUAL(243, static_cast<uint32_t>(var1));
-  CHECK_EQUAL(15.1875, static_cast<double>(var1));
-}
-
-
-/**
- * Test if substraction of two values by + works correctly
- */
-TEST(QVariable, SubstTwoQVals)
-{
-  QVariable<int32_t, 4>  var1(2.5), var2(12.7);
-
-  CHECK_EQUAL(40, static_cast<int32_t>(var1));
-  CHECK_EQUAL(203, static_cast<int32_t>(var2));
-
-  QVariable<int32_t, 4> res = var1 - var2;
-
-  CHECK_EQUAL(-163, static_cast<int32_t>(res));
-  CHECK_EQUAL(-10.1875, static_cast<double>(res));
+  CHECK_EQUAL(78079, res.getRawValue());
+  
+  CHECK_EQUAL(true, QVariableCheckResult(double(res), 305.0, res.getPrecision()));
 }
 
 /**
- * Test if substraction of two values by -= works correctly
+ * Test if multiplication of two fxp values works correctly
  */
-TEST(QVariable, SubstTwoQValsBySubstEq)
+TEST(QVariable, MultiTwoFXPValues1)
 {
-  QVariable<int32_t, 4>  var1(2.5), var2(12.7);
+  QVariable<int32_t, 8> var1(152.56), var2(2.0);
 
-  CHECK_EQUAL(40, static_cast<int32_t>(var1));
-  CHECK_EQUAL(203, static_cast<int32_t>(var2));
+  QVariable<int32_t, 8> res = var1 * var2;
 
-  var1 -= var2;
+  CHECK_EQUAL(39055, var1.getRawValue());
+  CHECK_EQUAL(512, var2.getRawValue());
 
-  CHECK_EQUAL(-163, static_cast<int32_t>(var1));
-  CHECK_EQUAL(-10.1875, static_cast<double>(var1));
+  CHECK_EQUAL(78110, res.getRawValue());
+  CHECK_EQUAL(true, QVariableCheckResult(double(res), 305.12, res.getPrecision()));
 }
 
 /**
- * Test if substraction of raw value by - works correctly
+ * Test if multiplication of two fxp values works correctly
  */
-TEST(QVariable, SubstTwoQValsRaw)
+TEST(QVariable, MultiTwoFXPValues2)
 {
-  QVariable<int32_t, 4>  var1(2.5);
+  QVariable<int32_t, 8> var1(152.56), var2(-2.0);
 
-  CHECK_EQUAL(40u, static_cast<int32_t>(var1));
+  QVariable<int32_t, 8> res = var1 * var2;
 
-  QVariable<int32_t, 4> res = var1 - 203;
+  CHECK_EQUAL(39055, var1.getRawValue());
+  CHECK_EQUAL(-512, var2.getRawValue());
 
-  CHECK_EQUAL(-163, static_cast<int32_t>(res));
-  CHECK_EQUAL(-10.1875, static_cast<double>(res));
+  CHECK_EQUAL(-78110, res.getRawValue());
+  CHECK_EQUAL(true, QVariableCheckResult(double(res), -305.12, res.getPrecision()));
 }
 
 /**
- * Test if substraction of raw value by -= works correctly
+ * Test if division of two fxp values works correctly
  */
-TEST(QVariable, SubstTwoQValsRawBySubstEq)
+TEST(QVariable, DivideTwoFXPValues1)
 {
-  QVariable<int32_t, 4>  var1(2.5);
+  QVariable<int32_t, 8> var1(223.5), var2(0.1);
 
-  CHECK_EQUAL(40u, static_cast<int32_t>(var1));
+  QVariable<int32_t, 8> res = var1 / var2;
 
-  var1 -= 203u;
+  CHECK_EQUAL(57216, var1.getRawValue());
+  CHECK_EQUAL(25, var2.getRawValue());
 
-  CHECK_EQUAL(-163, static_cast<int32_t>(var1));
-  CHECK_EQUAL(-10.1875, static_cast<double>(var1));
+  CHECK_EQUAL(585891, res.getRawValue());
+  
+  // Result is 2288.64 due to round error in var2(0.1) = 0.097656
+  CHECK_EQUAL(true, QVariableCheckResult(double(res), 2288.64, res.getPrecision()));
 }
 
 /**
- * Test if multiplication of two values by * works correctly
+ * Test if division of two fxp values works correctly
  */
-TEST(QVariable, MultiTwoQVals)
+TEST(QVariable, DivideTwoFXPValues2)
 {
-  QVariable<int32_t, 4>  var1(2.5), var2(-12.7);
+  QVariable<int32_t, 8> var1(223.5), var2(-0.1);
 
-  CHECK_EQUAL(40, static_cast<int32_t>(var1));
-  CHECK_EQUAL(-203, static_cast<int32_t>(var2));
+  QVariable<int32_t, 8> res = var1 / var2;
 
-  QVariable<int32_t, 4> res = var1 * var2;
+  CHECK_EQUAL(57216, var1.getRawValue());
+  CHECK_EQUAL(-25, var2.getRawValue());
 
-  CHECK_EQUAL(-508, static_cast<int32_t>(res));
-  CHECK_EQUAL(-31.75, static_cast<double>(res));
-}
-
-/**
- * Test if multiplication of two values by *= works correctly
- */
-TEST(QVariable, MultiTwoQValsByMultiEq)
-{
-  QVariable<int32_t, 4>  var1(2.5), var2(12.7);
-
-  CHECK_EQUAL(40, static_cast<int32_t>(var1));
-  CHECK_EQUAL(203, static_cast<int32_t>(var2));
-
-  var1 *= var2;
-
-  CHECK_EQUAL(507, static_cast<int32_t>(var1));
-  CHECK_EQUAL(31.6875, static_cast<double>(var1));
-}
-
-/**
- * Test if multiplication of raw value by * works correctly
- */
-TEST(QVariable, MultiTwoQValsRaw)
-{
-  QVariable<int32_t, 4>  var1(2.5);
-
-  CHECK_EQUAL(40u, static_cast<int32_t>(var1));
-
-  QVariable<int32_t, 4> res = var1 * -203;
-
-  CHECK_EQUAL(-508, static_cast<int32_t>(res));
-  CHECK_EQUAL(-31.75, static_cast<double>(res));
-}
-
-/**
- * Test if multiplication of raw value by *= works correctly
- */
-TEST(QVariable, MultiTwoQValsRawByMultiEq)
-{
-  QVariable<int32_t, 4>  var1(2.5);
-
-  CHECK_EQUAL(40u, static_cast<int32_t>(var1));
-
-  var1 *= 203u;
-
-  CHECK_EQUAL(507, static_cast<int32_t>(var1));
-  CHECK_EQUAL(31.6875, static_cast<double>(var1));
-}
-
-/**
- * Test if division of two values by / works correctly
- */
-TEST(QVariable, DivideTwoQVals)
-{
-  QVariable<int32_t, 4>  var1(2.5), var2(-12.7);
-
-  CHECK_EQUAL(40, static_cast<int32_t>(var1));
-  CHECK_EQUAL(-203, static_cast<int32_t>(var2));
-
-  QVariable<int32_t, 4> res = var1 / var2;
-
-  CHECK_EQUAL(-3, static_cast<int32_t>(res));
-  CHECK_EQUAL(-0.1875, static_cast<double>(res));
-}
-
-/**
- * Test if division of two values by /= works correctly
- */
-TEST(QVariable, DivideTwoQValsByDivideEq)
-{
-  QVariable<int32_t, 4>  var1(2.5), var2(12.7);
-
-  CHECK_EQUAL(40, static_cast<int32_t>(var1));
-  CHECK_EQUAL(203, static_cast<int32_t>(var2));
-
-  var1 /= var2;
-
-  CHECK_EQUAL(3, static_cast<int32_t>(var1));
-  CHECK_EQUAL(0.1875, static_cast<double>(var1));
-}
-
-/**
- * Test if division of raw value by / works correctly
- */
-TEST(QVariable, DivideTwoQValsRaw)
-{
-  QVariable<int32_t, 4>  var1(2.5);
-
-  CHECK_EQUAL(40u, static_cast<int32_t>(var1));
-
-  QVariable<int32_t, 4> res = var1 / -203;
-
-  CHECK_EQUAL(-3, static_cast<int32_t>(res));
-  CHECK_EQUAL(-0.1875, static_cast<double>(res));
-}
-
-/**
- * Test if division of raw value by /= works correctly
- */
-TEST(QVariable, DivideTwoQValsRawByDivisionEq)
-{
-  QVariable<int32_t, 4>  var1(2.5);
-
-  CHECK_EQUAL(40u, static_cast<int32_t>(var1));
-
-  var1 /= 203u;
-
-  CHECK_EQUAL(3, static_cast<int32_t>(var1));
-  CHECK_EQUAL(0.1875, static_cast<double>(var1));
+  CHECK_EQUAL(-585891, res.getRawValue());
+  
+  // Result is 2288.64 due to round error in var2(0.1) = -0.097656
+  CHECK_EQUAL(true, QVariableCheckResult(double(res), -2288.64, res.getPrecision()));
 }
 
  /**
