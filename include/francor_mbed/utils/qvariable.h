@@ -167,22 +167,27 @@ public:
 
   QVariable operator + (QVariable const& rhs) const
   {
-    return QVariable(this->_raw_value + rhs._raw_value);
+    return QVariable(static_cast<DataType>(this->_raw_value + rhs._raw_value));
   } 
 
   QVariable operator - (QVariable const& rhs) const
   {
-    return QVariable(this->_raw_value - rhs._raw_value);
+    return QVariable(static_cast<DataType>(this->_raw_value - rhs._raw_value));
   }
 
   QVariable operator * (QVariable const& rhs) const
   {
-    return QVariable((this->_raw_value * rhs._raw_value) >> NumFracBits);
+    return QVariable(static_cast<DataType>((this->_raw_value * rhs._raw_value) >> NumFracBits));
   }
 
   QVariable operator / (QVariable const& rhs) const
   {
-    return QVariable((this->_raw_value << NumFracBits) / rhs._raw_value);
+    return QVariable(static_cast<DataType>((this->_raw_value << NumFracBits) / rhs._raw_value));
+  }
+
+  QVariable operator % (QVariable const& rhs) const
+  {
+    return QVariable(static_cast<DataType>(this->_raw_value % rhs._raw_value));
   }
 
   /* Compare operators */

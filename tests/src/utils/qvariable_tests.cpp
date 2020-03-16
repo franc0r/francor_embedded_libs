@@ -280,6 +280,18 @@ TEST(QVariable, DivideTwoFXPValues2)
 }
 
 /**
+ * Test if operator % works
+ */
+TEST(QVariable, ModulusOperator)
+{
+  QVariable<int8_t, 2> val1(20.5), val2(10.0);
+
+  QVariable<int8_t, 2> res = val1 % val2;
+
+  CHECK_EQUAL(2, res.getRawValue());
+}
+
+/**
  * Test if comparison operator == works correctly
  */
 TEST(QVariable, CompareOperatorEqual)
