@@ -279,6 +279,76 @@ TEST(QVariable, DivideTwoFXPValues2)
   CHECK_EQUAL(true, QVariableCheckResult(double(res), -2288.64, res.getPrecision()));
 }
 
+/**
+ * Test if comparison operator == works correctly
+ */
+TEST(QVariable, CompareOperatorEqual)
+{
+  QVariable<int32_t, 14> var1(1234.34), var2(1234.34), var3(1234.44);
+
+  CHECK_EQUAL(true, (var1 == var2));
+  CHECK_EQUAL(false, (var1 == var3));
+}
+
+/**
+ * Test if comparison operator != works correctly
+ */
+TEST(QVariable, CompareOperatorUnEqual)
+{
+  QVariable<int32_t, 14> var1(1234.34), var2(1234.34), var3(1234.44);
+
+  CHECK_EQUAL(true, (var1 != var3));
+  CHECK_EQUAL(false, (var1 != var2));
+}
+
+/**
+ * Test if comparison operator >= works correctly
+ */
+TEST(QVariable, CompareOperatorGreaterEqual)
+{
+  QVariable<int32_t, 14> var1(1234.34), var2(1234.34), var3(1234.44), var4(0.1);
+
+  CHECK_EQUAL(true, (var1 >= var2));
+  CHECK_EQUAL(true, (var1 >= var4));
+  CHECK_EQUAL(false, (var1 >= var3));
+}
+
+/**
+ * Test if comparison operator <= works correctly
+ */
+TEST(QVariable, CompareOperatorSmallerEqual)
+{
+  QVariable<int32_t, 14> var1(1234.34), var2(1234.34), var3(1234.44), var4(0.1);
+
+  CHECK_EQUAL(true, (var1 <= var2));
+  CHECK_EQUAL(true, (var4 <= var3));
+  CHECK_EQUAL(false, (var3 <= var1));
+}
+
+/**
+ * Test if comparison operator > works correctly
+ */
+TEST(QVariable, CompareOperatorGreater)
+{
+  QVariable<int32_t, 14> var1(1234.34), var2(1234.34), var3(1234.44), var4(0.1);
+
+  CHECK_EQUAL(true, (var3 > var2));
+  CHECK_EQUAL(true, (var1 > var4));
+  CHECK_EQUAL(false, (var4 > var1));
+}
+
+/**
+ * Test if comparison operator < works correctly
+ */
+TEST(QVariable, CompareOperatorSmaller)
+{
+  QVariable<int32_t, 14> var1(1234.34), var2(1234.34), var3(1234.44), var4(0.1);
+
+  CHECK_EQUAL(true, (var1 < var3));
+  CHECK_EQUAL(true, (var4 < var2));
+  CHECK_EQUAL(false, (var1 < var4));
+}
+
  /**
   * @}
   */ // Tests

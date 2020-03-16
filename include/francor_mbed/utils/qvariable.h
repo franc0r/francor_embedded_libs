@@ -68,8 +68,26 @@ public:
    * 
    * @param v Value of variable in raw fixed point representation
    */
-  QVariable(const DataType& v) :
+  QVariable(const DataType v) :
     _raw_value(v) {}
+
+  /**
+   * @brief Construct a new q-variabel from different scaled q-variable raw values
+   * 
+   * @param v Raw value of variable
+   * @param num_frac_bits Number of fractional bits of variable
+   */
+  QVariable(const DataType v, const std::size_t num_frac_bits)
+  {
+    if(_num_frac_bits >= num_frac_bits) 
+    {
+      _raw_value = static_cast<DataType>(v) << (_num_frac_bits - num_frac_bits);
+    }
+    else
+    {
+      _raw_value = static_cast<DataType>(v) >> (num_frac_bits - _num_frac_bits);
+    }
+  }
 
   /**
    * @brief Construct a new q-variable with floating point value
@@ -96,7 +114,7 @@ public:
    * @param v Variable
    */
   template<typename T>
-  void convert(const T v)
+  void convert(const T& v)
   {
     if(_num_frac_bits >= v._num_frac_bits) 
     {
@@ -165,6 +183,38 @@ public:
   QVariable operator / (QVariable const& rhs) const
   {
     return QVariable((this->_raw_value << NumFracBits) / rhs._raw_value);
+  }
+
+  /* Compare operators */
+
+  bool operator == (QVariable const& rhs) const
+  {
+    return (this->_raw_value == rhs._raw_value);
+  }
+
+  bool operator != (QVariable const& rhs) const
+  {
+    return (this->_raw_value != rhs._raw_value);
+  }
+
+  bool operator >= (QVariable const& rhs) const
+  {
+    return (this->_raw_value >= rhs._raw_value);
+  }
+
+  bool operator <= (QVariable const& rhs) const
+  {
+    return (this->_raw_value <= rhs._raw_value);
+  }
+
+  bool operator > (QVariable const& rhs) const
+  {
+    return (this->_raw_value > rhs._raw_value);
+  }
+
+  bool operator < (QVariable const& rhs) const
+  {
+    return (this->_raw_value < rhs._raw_value);
   }
   
 
