@@ -1,5 +1,5 @@
 /**
- * @file qvariable_tests.h
+ * @file qvariable_tests.cpp
  * @author Martin Bauernschmitt (martin.bauernschmitt@posteo.de)
  *
  * @brief Unit test source file of qvariable
@@ -76,13 +76,25 @@ TEST(QVariable, ConstructorDouble)
 }
 
 /**
+ * Test if decimal value is returned correctly
+ */
+TEST(QVariable, GetDecimalValue)
+{
+  QVariable<int32_t, 15>  var(-30.45);
+
+  const int32_t dec = static_cast<int32_t>(var);
+
+  CHECK_EQUAL(-30, dec);
+}
+
+/**
  * Test if float is returned correctly
  */
 TEST(QVariable, GetFloatValue)
 {
   QVariable<int32_t, 8>  var1(-2.134);
 
-  const float val = var1;
+  const float val = static_cast<float>(var1);
   CHECK_EQUAL(-2.1328125f, val);
 }
 
@@ -93,7 +105,7 @@ TEST(QVariable, GetDoubleValue)
 {
   QVariable<uint32_t, 8>  var1(2.134);
 
-  const double val = var1;
+  const double val = static_cast<double>(var1);
   CHECK_EQUAL(2.1328125, val);
 }
 

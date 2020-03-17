@@ -116,13 +116,13 @@ public:
   template<typename T>
   void convert(const T& v)
   {
-    if(_num_frac_bits >= v._num_frac_bits) 
+    if(_num_frac_bits >= v.getNumFracBits())
     {
-      _raw_value = static_cast<DataType>(v._raw_value) << (_num_frac_bits - v._num_frac_bits);
+      _raw_value = static_cast<DataType>(v.getRawValue()) << (_num_frac_bits - v.getNumFracBits());
     }
     else
     {
-      _raw_value = static_cast<DataType>(v._raw_value) >> (v._num_frac_bits - _num_frac_bits);
+      _raw_value = static_cast<DataType>(v.getRawValue()) >> (v.getNumFracBits() - _num_frac_bits);
     }
   }
 
@@ -149,9 +149,15 @@ public:
    */
   const DataType getRawValue(void) const {return _raw_value;}
 
+  /** \brief Operator: Get decimal value (explicit cast) */
+  explicit operator DataType() const {
+    const QVariable bias(0.5);
+    return (_raw_value + bias._raw_value) >> _num_frac_bits;
+   }
+
   /** \brief Operator: Get floating point value float */
   operator const float() const {return static_cast<float>(_raw_value) 
-                                * static_cast<float>(_precision);}
+                                         * static_cast<float>(_precision);}
 
   /** \brief Operator: Get floating point value double */
   operator const double() const {return static_cast<double>(_raw_value) * _precision;}
