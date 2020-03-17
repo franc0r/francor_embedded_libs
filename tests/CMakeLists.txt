@@ -36,6 +36,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/)
 set(TEST_SRCS 
     ${CMAKE_SOURCE_DIR}/src/tests.cpp
     ${CMAKE_SOURCE_DIR}/src/utils/qvariable_tests.cpp
+    ${CMAKE_SOURCE_DIR}/src/utils/svm_utils_tests.cpp
 )
 
 add_executable(${TARGET_NAME} ${TEST_SRCS})
