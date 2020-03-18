@@ -141,8 +141,10 @@ public:
 
   void updateCCRValues(void)
   {
-    const uint16_t ccr_a = _lut[_sec_angle];
-    const uint16_t ccr_b = _lut[_num_angles - _sec_angle - 1];
+    constexpr SVMPWMLUT<_num_angles, CCRMax> lut;
+
+    const uint16_t ccr_a = lut[_sec_angle];
+    const uint16_t ccr_b = lut[_num_angles - _sec_angle - 1];
     const uint16_t ccr_ab = ccr_a + ccr_b;
 
     uint16_t ccr_0 = 0u;
@@ -221,9 +223,6 @@ private:
 
   /** \brief Maximum value of electrical angle */
   static constexpr int16_t _angle_max = _num_angles + (5u << AnglePrec);
-
-  /** \brief Lookuptable generated at compile time */
-  static constexpr inline SVMPWMLUT<_num_angles, CCRMax> _lut = {};
 
   int16_t   _angle = 0;       //!< Active electrical angle
   uint8_t   _actv_sec = 0u;   //!< Active sector
