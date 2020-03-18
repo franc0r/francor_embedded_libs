@@ -143,7 +143,13 @@ public:
   {
     const uint16_t ccr_a = _lut[_sec_angle];
     const uint16_t ccr_b = _lut[_num_angles - _sec_angle - 1];
-    const uint16_t ccr_0 = (CCRMax - ccr_a - ccr_b) >> 1u;
+    const uint16_t ccr_ab = ccr_a + ccr_b;
+
+    uint16_t ccr_0 = 0u;
+    if(ccr_ab < CCRMax) {
+      ccr_0 = (CCRMax - ccr_ab) >> 1u;
+    }
+
 
     switch(_actv_sec)
     {
@@ -196,9 +202,9 @@ public:
   const uint8_t   getActvSec(void) const {return _actv_sec;}
   const uint16_t  getSecAngle(void) const {return _sec_angle;}
 
-  const volatile uint16_t getCCRChn1(void) const {return _ccr_chn1;}
-  const volatile uint16_t getCCRChn2(void) const {return _ccr_chn2;}
-  const volatile uint16_t getCCRChn3(void) const {return _ccr_chn3;}
+  const uint16_t getCCRChn1(void) const {return _ccr_chn1;}
+  const uint16_t getCCRChn2(void) const {return _ccr_chn2;}
+  const uint16_t getCCRChn3(void) const {return _ccr_chn3;}
 
 #ifndef BUILD_TESTS
 private:
@@ -223,9 +229,9 @@ private:
   uint8_t   _actv_sec = 0u;   //!< Active sector
   uint16_t  _sec_angle = 0u;  //!< Angle in sector
 
-  volatile uint16_t _ccr_chn1 = 0u; //!< CCR value of channel 1
-  volatile uint16_t _ccr_chn2 = 0u; //!< CCR value of channel 2
-  volatile uint16_t _ccr_chn3 = 0u; //!< CCR value of channel 3
+  uint16_t _ccr_chn1 = 0u; //!< CCR value of channel 1
+  uint16_t _ccr_chn2 = 0u; //!< CCR value of channel 2
+  uint16_t _ccr_chn3 = 0u; //!< CCR value of channel 3
 };
 
  /**

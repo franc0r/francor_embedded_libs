@@ -39,6 +39,72 @@ TEST_GROUP(SVMPWM)
   void teardown() {}
 };
 
+void calcCCRValues(uint16_t& ccr1, uint16_t& ccr2, uint16_t& ccr3,
+                   const double angle_deg, const uint16_t ccr_max = 1000u,
+                   const double mod = 1.0)
+{
+  
+
+  // Calculate sector angle
+  const unsigned int sector = static_cast<unsigned int>(floor(angle_deg / 60.0));
+  const double sec_angle = angle_deg - static_cast<double>(sector) * 60.0;
+
+  const double angle_rad = sec_angle * (M_PI / 180.0);
+
+  const double ccra = sin((M_PI / 3.0) - angle_rad) * static_cast<double>(ccr_max) * mod;
+  const double ccrb = sin(angle_rad) * static_cast<double>(ccr_max) * mod;
+
+  const uint16_t ccra_u = static_cast<uint16_t>(round(ccra));
+  const uint16_t ccrb_u = static_cast<uint16_t>(round(ccrb));
+  const uint16_t ccr0_u = (ccr_max - ccra_u - ccrb_u) >> 1u;
+
+  switch(sector % 6)
+  {
+    case 0:
+    {
+      ccr1 = ccr0_u;
+      ccr2 = ccr0_u + ccrb_u;
+      ccr3 = ccr0_u + ccra_u + ccrb_u;
+    }break;
+
+    case 1:
+    {
+      ccr1 = ccr0_u;
+      ccr2 = ccr0_u + ccra_u + ccrb_u;
+      ccr3 = ccr0_u + ccra_u;
+    }break;
+
+    case 2:
+    {
+      ccr1 = ccr0_u + ccrb_u;
+      ccr2 = ccr0_u + ccra_u + ccrb_u;
+      ccr3 = ccr0_u;
+    }break;
+
+    case 3:
+    {
+      ccr1 = ccr0_u + ccra_u + ccrb_u;
+      ccr2 = ccr0_u + ccra_u;
+      ccr3 = ccr0_u;
+    }break;
+
+    case 4:
+    {
+      ccr1 = ccr0_u + ccra_u + ccrb_u;
+      ccr2 = ccr0_u;
+      ccr3 = ccr0_u + ccrb_u;
+    }break;
+
+    case 5:
+    {
+      ccr1 = ccr0_u + ccra_u;
+      ccr2 = ccr0_u;
+      ccr3 = ccr0_u + ccra_u + ccrb_u;
+    }break;
+  }
+
+}
+
 TEST(SVMPWM, LUTValuePrecision)
 {
   constexpr uint16_t NUM_VALUES = (1 << 8u);
@@ -101,72 +167,6 @@ TEST(SVMPWM, ConstructorMaskDefault)
   CHECK_EQUAL(0u, pwm0._ccr_chn1);
   CHECK_EQUAL(0u, pwm0._ccr_chn2);
   CHECK_EQUAL(0u, pwm0._ccr_chn3);
-}
-
-void calcCCRValues(uint16_t& ccr1, uint16_t& ccr2, uint16_t& ccr3,
-                   const double angle_deg, const uint16_t ccr_max = 1000u,
-                   const double mod = 1.0)
-{
-  
-
-  // Calculate sector angle
-  const unsigned int sector = static_cast<uint8_t>(floor(angle_deg / 60.0));
-  const double sec_angle = angle_deg - static_cast<double>(sector) * 60.0;
-
-  const double angle_rad = sec_angle * (M_PI / 180.0);
-
-  const double ccra = static_cast<double>((M_PI / 3.0) - angle_rad) * static_cast<double>(ccr_max) * mod;
-  const double ccrb = static_cast<double>(angle_rad) * static_cast<double>(ccr_max) * mod;
-
-  const uint16_t ccra_u = static_cast<uint16_t>(ccra);
-  const uint16_t ccrb_u = static_cast<uint16_t>(ccrb);
-  const uint16_t ccr0_u = (ccr_max - ccra_u - ccrb_u) >> 1u;
-
-  switch(sector % 6)
-  {
-    case 0:
-    {
-      ccr1 = ccr0_u;
-      ccr2 = ccr0_u + ccrb_u;
-      ccr3 = ccr0_u + ccra_u + ccrb_u;
-    }break;
-
-    case 1:
-    {
-      ccr1 = ccr0_u;
-      ccr2 = ccr0_u + ccra_u + ccrb_u;
-      ccr3 = ccr0_u + ccra_u;
-    }break;
-
-    case 2:
-    {
-      ccr1 = ccr0_u + ccrb_u;
-      ccr2 = ccr0_u + ccra_u + ccrb_u;
-      ccr3 = ccr0_u;
-    }break;
-
-    case 3:
-    {
-      ccr1 = ccr0_u + ccra_u + ccrb_u;
-      ccr2 = ccr0_u + ccra_u;
-      ccr3 = ccr0_u;
-    }break;
-
-    case 4:
-    {
-      ccr1 = ccr0_u + ccra_u + ccrb_u;
-      ccr2 = ccr0_u;
-      ccr3 = ccr0_u + ccrb_u;
-    }break;
-
-    case 5:
-    {
-      ccr1 = ccr0_u + ccra_u;
-      ccr2 = ccr0_u;
-      ccr3 = ccr0_u + ccra_u + ccrb_u;
-    }break;
-  }
-
 }
 
 /**
@@ -285,21 +285,62 @@ TEST(SVMPWM, CCRCalculation)
   const double delta_angle = (60.0 / static_cast<double>(NUM));
   double angle = 0.0;
 
-  for(auto idx = 0u; idx < 10; idx++)
+  for(auto idx = 0u; idx < (NUM * 7); idx++)
   {
     uint16_t exp_ccr1 = 0, exp_ccr2 = 0, exp_ccr3 = 0;
     calcCCRValues(exp_ccr1, exp_ccr2, exp_ccr3, angle, 1000, 1.0);
 
     svm.updateCCRValues();
 
-    printf("Angle: %f | EXP: %i %i %i | SVM: %i %i %i\n", angle, 
-           exp_ccr1, exp_ccr2, exp_ccr3, svm.getCCRChn1(), svm.getCCRChn2(), svm.getCCRChn3());
+    /*printf("[%i] Angle: %f (SVM-Angle: %i %i %i) | EXP: %i %i %i | SVM: %i %i %i\n", idx, angle, svm._angle, 
+           svm._sec_angle, svm._actv_sec, 
+           static_cast<int>(exp_ccr1), static_cast<int>(exp_ccr2), static_cast<int>(exp_ccr3), 
+           static_cast<int>(svm.getCCRChn1()), static_cast<int>(svm.getCCRChn2()), 
+           static_cast<int>(svm.getCCRChn3()));*/
+
+    CHECK_TRUE_TEXT(abs(static_cast<int>(exp_ccr1) - svm.getCCRChn1()) < 5, "CCR1 out of boundaries!");
 
     angle += delta_angle;
+    if(angle < 0.0) {angle += 360.0;}
+    else if(angle > 360.0) {angle -= 360.0;}
+
     svm.move(1);
   }
 }
 
+TEST(SVMPWM, CCRCalculationNeg)
+{
+  constexpr uint16_t PREC = 8;
+  constexpr uint16_t CCR = 1000u;
+  constexpr uint16_t NUM = (1u << PREC);
+
+  SVMPWM<8, 1000> svm;
+
+  const double delta_angle = (60.0 / static_cast<double>(NUM));
+  double angle = 0.0;
+  
+  for(auto idx = 0u; idx < (NUM * 7); idx++)
+  {
+    uint16_t exp_ccr1 = 0, exp_ccr2 = 0, exp_ccr3 = 0;
+    calcCCRValues(exp_ccr1, exp_ccr2, exp_ccr3, angle, 1000, 1.0);
+
+    svm.updateCCRValues();
+
+    /*printf("[%i] Angle: %f (SVM-Angle: %i %i %i) | EXP: %i %i %i | SVM: %i %i %i\n", idx, angle, svm._angle, 
+           svm._sec_angle, svm._actv_sec, 
+           static_cast<int>(exp_ccr1), static_cast<int>(exp_ccr2), static_cast<int>(exp_ccr3), 
+           static_cast<int>(svm.getCCRChn1()), static_cast<int>(svm.getCCRChn2()), 
+           static_cast<int>(svm.getCCRChn3()));*/
+
+    CHECK_TRUE_TEXT(abs(static_cast<int>(exp_ccr1) - svm.getCCRChn1()) < 5, "CCR1 out of boundaries!");
+
+    angle -= delta_angle;
+    if(angle < 0.0) {angle += 360.0;}
+    else if(angle > 360.0) {angle -= 360.0;}
+
+    svm.move(-1);
+  }
+}
  /**
   * @}
   */ // Tests
