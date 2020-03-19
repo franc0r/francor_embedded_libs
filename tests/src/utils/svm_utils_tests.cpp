@@ -299,23 +299,23 @@ TEST(SVMPWM, CCRCalculation)
 
   const double delta_angle = (60.0 / static_cast<double>(NUM));
   double angle = 0.0;
-  printf("\n");
+
   for(auto idx = 0u; idx < (NUM * 7); idx++)
   {
     uint16_t exp_ccr1 = 0, exp_ccr2 = 0, exp_ccr3 = 0;
     calcCCRValues(exp_ccr1, exp_ccr2, exp_ccr3, angle, CCR, 1.0);
 
-    svm.updateCCRValues();
+    svm.update();
 
     CHECK_EQUAL(exp_ccr1, svm.getCCRChn1());
     CHECK_EQUAL(exp_ccr2, svm.getCCRChn2());
     CHECK_EQUAL(exp_ccr3, svm.getCCRChn3());
 
-    printf("[%i]: Angle: %.3f", angle);
+    /*printf("[%i]: Angle: %.3f", angle);
     printf(" | IDX: %i SEC-IDX: %i SEC: %i ", svm.getAngle(), svm.getSecAngle(), svm.getActvSec());
     printf(" | EXP: %i %i %i", exp_ccr1, exp_ccr2, exp_ccr3);
 
-    printf("\n");
+    printf("\n");*/
 
     angle += delta_angle;
     if(angle < 0.0) {angle += 360.0;}
@@ -341,7 +341,7 @@ TEST(SVMPWM, CCRCalculationNeg)
     uint16_t exp_ccr1 = 0, exp_ccr2 = 0, exp_ccr3 = 0;
     calcCCRValues(exp_ccr1, exp_ccr2, exp_ccr3, angle, 1000, 1.0);
 
-    svm.updateCCRValues();
+    svm.update();
 
     CHECK_EQUAL(exp_ccr1, svm.getCCRChn1());
     CHECK_EQUAL(exp_ccr2, svm.getCCRChn2());

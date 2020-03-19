@@ -139,18 +139,56 @@ public:
     _actv_sec  = static_cast<uint8_t>(_angle >> _sec_bit_pos);
   }
 
-  void updateCCRValues(void)
+  void update(QVariable<int32_t, 10u> mod = QVariable<int32_t, 10u>(1.0))
   {
     constexpr SVMPWMLUT<_num_angles, CCRMax> lut;
 
-    const uint16_t ccr_a = lut[_sec_angle];
-    const uint16_t ccr_b = lut[_num_angles - _sec_angle];
-    uint16_t ccr_ab = ccr_a + ccr_b;
+    // Convert lut values to fxp values
+    QVariable<int32_t, 10u> fxp_ccr_a(static_cast<int32_t>(lut[_sec_angle]), 0);
+    QVariable<int32_t, 10u> fxp_ccr_b(static_cast<int32_t>(lut[_num_angles - _sec_angle]), 0);
 
-    if(ccr_ab > CCRMax) ccr_ab = CCRMax;
-    const uint16_t ccr_0 = (CCRMax - ccr_ab) >> 1u;
+    // Multiply value with modulation factor
+    fxp_ccr_a = fxp_ccr_a * mod;
+    fxp_ccr_b = fxp_ccr_b * mod;
 
-    switch(_actv_sec)
+    // Convert back to normal value
+    const uint16_t ccr_a = static_cast<uint16_t>(static_cast<int32_t>(fxp_ccr_a));
+    const uint16_t ccr_b = static_cast<uint16_t>(static_cast<int32_t>(fxp_ccr_b));
+    
+    int ccr_0= static_cast<int>(CCRMax) - static_cast<int>(ccr_a) - static_cast<int>(ccr_b) + 1;
+    ccr_0 = (ccr_0 >> 1u);
+
+    if(ccr_0 < 0) ccr_0 = 0u;
+
+    assignWeights(ccr_a, ccr_b, ccr_0);
+  }
+
+  /* Getters */
+  const int16_t   getAngle(void) const {return _angle;}
+  const uint8_t   getActvSec(void) const {return _actv_sec;}
+  const uint16_t  getSecAngle(void) const {return _sec_angle;}
+
+  const uint16_t getCCRChn1(void) const {return _ccr_chn1;}
+  const uint16_t getCCRChn2(void) const {return _ccr_chn2;}
+  const uint16_t getCCRChn3(void) const {return _ccr_chn3;}
+
+#ifndef BUILD_TESTS
+private:
+#endif
+
+  /**
+   * @brief Assigns the weights to the correct ccr registers depending on
+   *        the sector
+   * 
+   * @param ccr_a Weight channel A
+   * @param ccr_a Weight channel B
+   * @param ccr_a Weight channel 0
+   */
+  void assignWeights(const uint16_t ccr_a, 
+                     const uint16_t ccr_b, 
+                     const uint16_t ccr_0)
+  {
+        switch(_actv_sec)
     {
       case 0:
       {
@@ -195,19 +233,6 @@ public:
       }break;
     }
   }
-
-  /* Getters */
-  const int16_t   getAngle(void) const {return _angle;}
-  const uint8_t   getActvSec(void) const {return _actv_sec;}
-  const uint16_t  getSecAngle(void) const {return _sec_angle;}
-
-  const uint16_t getCCRChn1(void) const {return _ccr_chn1;}
-  const uint16_t getCCRChn2(void) const {return _ccr_chn2;}
-  const uint16_t getCCRChn3(void) const {return _ccr_chn3;}
-
-#ifndef BUILD_TESTS
-private:
-#endif
 
   /** \brief Number of angles in LUT */
   static constexpr uint16_t _num_angles = (1u << AnglePrec);
