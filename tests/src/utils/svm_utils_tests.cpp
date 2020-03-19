@@ -54,7 +54,7 @@ void calcCCRValues(uint16_t& ccr1, uint16_t& ccr2, uint16_t& ccr3,
 
   const uint16_t ccra_u = static_cast<uint16_t>(round(ccra));
   const uint16_t ccrb_u = static_cast<uint16_t>(round(ccrb));
-  const uint16_t ccr0_u = (ccr_max - ccra_u - ccrb_u) >> 1u;
+  const uint16_t ccr0_u = (ccr_max - ccra_u - ccrb_u + 1) >> 1u;
 
   switch(sector % 6)
   {
@@ -327,11 +327,11 @@ TEST(SVMPWM, CCRCalculation)
 
 TEST(SVMPWM, CCRCalculationNeg)
 {
-  constexpr uint16_t PREC = 8;
+  constexpr uint16_t PREC = 4;
   constexpr uint16_t CCR = 1000u;
   constexpr uint16_t NUM = (1u << PREC);
 
-  SVMPWM<8, 1000> svm;
+  SVMPWM<PREC, CCR> svm;
 
   const double delta_angle = (60.0 / static_cast<double>(NUM));
   double angle = 0.0;
