@@ -114,9 +114,15 @@ class SVMPWM
 {
 public:
 
+  /**
+   * @brief Construct a new SVMPWM object
+   */
   SVMPWM(void)
   {
-
+    // Load lookup table into RAM
+    constexpr SVMPWMLUT<_num_angles, CCRMax> lut;
+    for(auto idx = 0u; idx < (_num_angles + 1); idx++)
+      _lut[idx] = lut[idx];
   }
 
   /**
@@ -141,11 +147,9 @@ public:
 
   void update(QVariable<int32_t, 10u> mod = QVariable<int32_t, 10u>(1.0))
   {
-    constexpr SVMPWMLUT<_num_angles, CCRMax> lut;
-
     // Convert lut values to fxp values
-    QVariable<int32_t, 10u> fxp_ccr_a(static_cast<int32_t>(lut[_sec_angle]), 0);
-    QVariable<int32_t, 10u> fxp_ccr_b(static_cast<int32_t>(lut[_num_angles - _sec_angle]), 0);
+    QVariable<int32_t, 10u> fxp_ccr_a(static_cast<int32_t>(_lut[_sec_angle]), 0);
+    QVariable<int32_t, 10u> fxp_ccr_b(static_cast<int32_t>(_lut[_num_angles - _sec_angle]), 0);
 
     // Multiply value with modulation factor
     fxp_ccr_a = fxp_ccr_a * mod;
@@ -245,6 +249,9 @@ private:
 
   /** \brief Maximum value of electrical angle */
   static constexpr int16_t _angle_max = _num_angles + (5u << AnglePrec);
+
+  /** \brief Lookup table stored in RAM */
+  volatile uint16_t _lut[_num_angles + 1];
 
   int16_t   _angle = 0;       //!< Active electrical angle
   uint8_t   _actv_sec = 0u;   //!< Active sector
