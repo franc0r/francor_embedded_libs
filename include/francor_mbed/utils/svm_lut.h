@@ -177,7 +177,7 @@ public:
   }
 
   /**
-   * @brief Access operator to read lookup table entries
+   * @brief Access operator to read lookup table entries from ROM
    * 
    * @param idx Index of entry directly related to angle
    * @return const uint16_t Value stored in lookup table at desired index/angle
@@ -196,7 +196,64 @@ private:
   /** \brief Number of entries in ROM table */
   static const uint16_t _num_entries = (1u << BitPrecision) + 1;
 
-  /** \brief Lookup table */
+  /** \brief Lookup table in ROM */
+  uint16_t _entry_list[_num_entries] = {0};
+};
+
+/**
+ * @brief Space Vector Modulation Lookup Table for CCR Registers in RAM
+ * 
+ * @tparam BitPrecision Bit precision of the table. The table will store 2^BitPrecision + 1 entries
+ * @tparam CCRMax Maximum value to set in the campture compare register 
+ * 
+ * # Overview
+ * 
+ * This class has the same functionality as @ref SVMLUTROM class, but the difference is
+ * that the ROM data is copied to the RAM, to make the values fast accessible for calculations.
+ * 
+ * # Usage
+ * 
+ * Usage is exactly the same as with @ref SVMLUTROM class.
+ */
+template<uint16_t BitPrecision = 8u, uint16_t CCRMax = 1000u>
+class SVMLUTRAM
+{
+public:
+
+  /**
+   * @brief Constructor create lookup table for RAM
+   */
+  SVMLUTRAM()
+  {
+    // Generate lookuptable in ROM
+    constexpr SVMLUTROM<BitPrecision, CCRMax> lut_rom = {};
+
+    // Copy ROM data to RAM
+    for(auto idx = 0u; idx < _num_entries; idx++)
+      _entry_list[idx] = lut_rom[idx];
+  }
+
+  /**
+   * @brief Access operator to read lookup table entries from RAM
+   * 
+   * @param idx Index of entry directly related to angle
+   * @return const uint16_t Value stored in lookup table at desired index/angle
+   */
+  inline const uint16_t operator[] (const uint16_t idx) const {return _entry_list[idx];}
+
+  /**
+   * @brief Get the number of entries in the lookup table
+   * 
+   * @return const uint16_t Number of entries
+   */
+  const uint16_t getNumEntries() const {return _num_entries;}
+
+private:
+
+  /** \brief Number of entries in ROM table */
+  static constexpr uint16_t _num_entries = (1u << BitPrecision) + 1;
+
+  /** \brief Lookup table in RAM */
   uint16_t _entry_list[_num_entries] = {0};
 };
 

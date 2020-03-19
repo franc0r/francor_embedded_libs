@@ -77,7 +77,7 @@ TEST_GROUP(SVMLUT)
 /**
  * Test if tables are compiling and number of entries is set correctly
  */
-TEST(SVMLUT, Constructor)
+TEST(SVMLUT, ROMConstructor)
 {
   constexpr SVMLUTROM<8u, 1000u>  svm_lut_rom1 = {};
   constexpr SVMLUTROM<9u, 1000u>  svm_lut_rom2 = {};
@@ -89,7 +89,7 @@ TEST(SVMLUT, Constructor)
 /**
  * Test if values in table with 8 bit precision are valid
  */
-TEST(SVMLUT, ValuePrecision8BInc)
+TEST(SVMLUT, ROMValuePrecision8BInc)
 {
   constexpr uint16_t BitPrecision = 8u;
   constexpr uint16_t CCRMax = 1000u;
@@ -113,7 +113,7 @@ TEST(SVMLUT, ValuePrecision8BInc)
 /**
  * Test if values in table with 12 bit precision are valid
  */
-TEST(SVMLUT, ValuePrecision12BInc)
+TEST(SVMLUT, ROMValuePrecision12BInc)
 {
   constexpr uint16_t BitPrecision = 12u;
   constexpr uint16_t CCRMax = 1000u;
@@ -132,6 +132,18 @@ TEST(SVMLUT, ValuePrecision12BInc)
 
     angle_rad -= angle_step_rad;
   }
+}
+
+/**
+ * Test if tables are compiling and number of entries is set correctly
+ */
+TEST(SVMLUT, RAMConstructor)
+{
+  SVMLUTRAM<8u, 1000u>  svm_lut_rom1 = {};
+  SVMLUTRAM<9u, 1000u>  svm_lut_rom2 = {};
+
+  CHECK_EQUAL(257u, svm_lut_rom1.getNumEntries());
+  CHECK_EQUAL(513u, svm_lut_rom2.getNumEntries());
 }
 
  /**
