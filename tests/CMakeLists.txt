@@ -37,6 +37,7 @@ set(TEST_SRCS
     ${CMAKE_SOURCE_DIR}/src/tests.cpp
     ${CMAKE_SOURCE_DIR}/src/utils/qvariable_tests.cpp
     ${CMAKE_SOURCE_DIR}/src/utils/svm_utils_tests.cpp
+    ${CMAKE_SOURCE_DIR}/src/utils/svm_lut_tests.cpp
 )
 
 add_executable(${TARGET_NAME} ${TEST_SRCS})
