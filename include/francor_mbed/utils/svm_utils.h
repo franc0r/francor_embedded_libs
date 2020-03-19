@@ -73,11 +73,11 @@ public:
    */
   constexpr SVMPWMLUT(void) {
     // Calculate angle step per value in rad
-    const double angle_inc = (60.0 / static_cast<double>(NumValues)) * (M_PI / 180.0);
+    const double angle_inc = M_PI / (3.0 * static_cast<double>(NumValues));
     const double ccr_limit_d = static_cast<double>(CCRMax);
 
     // Generate lookup table
-    for(auto idx = 0u; idx < NumValues; idx++) {
+    for(auto idx = 0u; idx < (NumValues+1); idx++) {
 
       const double angle_rad = (M_PI / 3.0) - angle_inc * static_cast<double>(idx);
       const double ccr_d = round(ccr_limit_d * sin(angle_rad));
@@ -96,7 +96,7 @@ public:
 
 private:
 
-  uint16_t  _ccr_lut[NumValues] = {0};  //!< Array containing all data (lookup array)
+  uint16_t  _ccr_lut[NumValues+1] = {0};  //!< Array containing all data (lookup array)
 };
 
 /**
@@ -144,14 +144,11 @@ public:
     constexpr SVMPWMLUT<_num_angles, CCRMax> lut;
 
     const uint16_t ccr_a = lut[_sec_angle];
-    const uint16_t ccr_b = lut[_num_angles - _sec_angle - 1];
-    const uint16_t ccr_ab = ccr_a + ccr_b;
+    const uint16_t ccr_b = lut[_num_angles - _sec_angle];
+    uint16_t ccr_ab = ccr_a + ccr_b;
 
-    uint16_t ccr_0 = 0u;
-    if(ccr_ab < CCRMax) {
-      ccr_0 = (CCRMax - ccr_ab) >> 1u;
-    }
-
+    if(ccr_ab > CCRMax) ccr_ab = CCRMax;
+    const uint16_t ccr_0 = (CCRMax - ccr_ab) >> 1u;
 
     switch(_actv_sec)
     {

@@ -43,10 +43,8 @@ void calcCCRValues(uint16_t& ccr1, uint16_t& ccr2, uint16_t& ccr3,
                    const double angle_deg, const uint16_t ccr_max = 1000u,
                    const double mod = 1.0)
 {
-  
-
   // Calculate sector angle
-  const unsigned int sector = static_cast<unsigned int>(floor(angle_deg / 60.0));
+  const unsigned int sector = static_cast<unsigned int>(floor(angle_deg) / 60.0);
   const double sec_angle = angle_deg - static_cast<double>(sector) * 60.0;
 
   const double angle_rad = sec_angle * (M_PI / 180.0);
@@ -113,7 +111,8 @@ TEST(SVMPWM, LUTValuePrecision)
   constexpr SVMPWMLUT<NUM_VALUES, CCR_MAX> lut = {};
 
   double angle = (M_PI / 3.0);
-  printf("\n");
+
+  // Loop forward
   for(auto idx = 0u; idx < NUM_VALUES; idx++)
   { 
     // Calculate ccr value with high prec
@@ -126,6 +125,22 @@ TEST(SVMPWM, LUTValuePrecision)
 
     // Update angle
     angle -= (60.0 / static_cast<double>(NUM_VALUES)) * (M_PI / 180.0);
+  }
+
+  // Loop backward
+  angle = 0.0;
+  for(auto idx = 0u; idx < NUM_VALUES; idx++)
+  {
+    // Calculate ccr value with high prec
+    const double ccr_high_prec = static_cast<double>(CCR_MAX) * sin(angle);
+
+    // Round ccr values
+    const uint16_t ccr_calc = static_cast<uint16_t>(round(ccr_high_prec));
+
+    CHECK_EQUAL(ccr_calc, lut[NUM_VALUES - idx]);
+
+    // Update angle
+    angle += (60.0 / static_cast<double>(NUM_VALUES)) * (M_PI / 180.0);
   }
 }
 
@@ -276,29 +291,31 @@ TEST(SVMPWM, AngleUnderflowQ8)
 
 TEST(SVMPWM, CCRCalculation)
 {
-  constexpr uint16_t PREC = 8;
+  constexpr uint16_t PREC = 3;
   constexpr uint16_t CCR = 1000u;
   constexpr uint16_t NUM = (1u << PREC);
 
-  SVMPWM<8, 1000> svm;
+  SVMPWM<PREC, CCR> svm;
 
   const double delta_angle = (60.0 / static_cast<double>(NUM));
   double angle = 0.0;
-
+  printf("\n");
   for(auto idx = 0u; idx < (NUM * 7); idx++)
   {
     uint16_t exp_ccr1 = 0, exp_ccr2 = 0, exp_ccr3 = 0;
-    calcCCRValues(exp_ccr1, exp_ccr2, exp_ccr3, angle, 1000, 1.0);
+    calcCCRValues(exp_ccr1, exp_ccr2, exp_ccr3, angle, CCR, 1.0);
 
     svm.updateCCRValues();
 
-    /*printf("[%i] Angle: %f (SVM-Angle: %i %i %i) | EXP: %i %i %i | SVM: %i %i %i\n", idx, angle, svm._angle, 
-           svm._sec_angle, svm._actv_sec, 
-           static_cast<int>(exp_ccr1), static_cast<int>(exp_ccr2), static_cast<int>(exp_ccr3), 
-           static_cast<int>(svm.getCCRChn1()), static_cast<int>(svm.getCCRChn2()), 
-           static_cast<int>(svm.getCCRChn3()));*/
+    CHECK_EQUAL(exp_ccr1, svm.getCCRChn1());
+    CHECK_EQUAL(exp_ccr2, svm.getCCRChn2());
+    CHECK_EQUAL(exp_ccr3, svm.getCCRChn3());
 
-    CHECK_TRUE_TEXT(abs(static_cast<int>(exp_ccr1) - svm.getCCRChn1()) < 5, "CCR1 out of boundaries!");
+    printf("[%i]: Angle: %.3f", angle);
+    printf(" | IDX: %i SEC-IDX: %i SEC: %i ", svm.getAngle(), svm.getSecAngle(), svm.getActvSec());
+    printf(" | EXP: %i %i %i", exp_ccr1, exp_ccr2, exp_ccr3);
+
+    printf("\n");
 
     angle += delta_angle;
     if(angle < 0.0) {angle += 360.0;}
@@ -326,13 +343,9 @@ TEST(SVMPWM, CCRCalculationNeg)
 
     svm.updateCCRValues();
 
-    /*printf("[%i] Angle: %f (SVM-Angle: %i %i %i) | EXP: %i %i %i | SVM: %i %i %i\n", idx, angle, svm._angle, 
-           svm._sec_angle, svm._actv_sec, 
-           static_cast<int>(exp_ccr1), static_cast<int>(exp_ccr2), static_cast<int>(exp_ccr3), 
-           static_cast<int>(svm.getCCRChn1()), static_cast<int>(svm.getCCRChn2()), 
-           static_cast<int>(svm.getCCRChn3()));*/
-
-    CHECK_TRUE_TEXT(abs(static_cast<int>(exp_ccr1) - svm.getCCRChn1()) < 5, "CCR1 out of boundaries!");
+    CHECK_EQUAL(exp_ccr1, svm.getCCRChn1());
+    CHECK_EQUAL(exp_ccr2, svm.getCCRChn2());
+    CHECK_EQUAL(exp_ccr3, svm.getCCRChn3());
 
     angle -= delta_angle;
     if(angle < 0.0) {angle += 360.0;}
@@ -341,6 +354,7 @@ TEST(SVMPWM, CCRCalculationNeg)
     svm.move(-1);
   }
 }
+
  /**
   * @}
   */ // Tests
