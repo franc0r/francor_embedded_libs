@@ -31,23 +31,19 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 /**
- * @file svm_utils_tests.cpp
+ * @file svm_handler_tests.cpp
  * @author Martin Bauernschmitt (martin.bauernschmitt@posteo.de)
  *
- * @brief Unit test source file of qvariable
+ * @brief Unit tests for space vector modulation handler
  *
  * @version 1.0
- * @date 2020-03-17
+ * @date 2020-03-20
  *
  * @copyright Copyright (c) 2020 Francor e.V. Nuremberg - BSD 3-Clause License
  *
  */
 
-#include "francor_mbed/utils/utils.h"
-#include "francor_mbed/utils/svm_utils.h"
-#include "francor_mbed/utils/svm_lut.h"
-#include <math.h>
-#include <cmath>
+#include "francor_mbed/utils/svm_handler.h"
 
 #include <CppUTest/TestHarness.h>
 #include <CppUTest/CommandLineTestRunner.h>
@@ -66,15 +62,31 @@ using namespace francor_mbed;
   * @{
   */
 
-TEST_GROUP(SVMPWM)
+/*--------------------------------------------------------------------------------*/
+/** @addtogroup SVMHandler
+  * @{
+  */
+
+TEST_GROUP(SVMHandler)
 {
   void setup() {}
   void teardown() {}
 };
 
-void calcCCRValues(uint16_t& ccr1, uint16_t& ccr2, uint16_t& ccr3,
-                   const double angle_deg, const uint16_t ccr_max = 1000u,
-                   const double mod = 1.0)
+/**
+ * @brief This function calculates the ccr values with high precision to
+ *        be able to compare it with the ones from the lookup table
+ * 
+ * @param ccr1 Reference to CCR1 value (output)
+ * @param ccr2 Reference to CCR2 value (output)
+ * @param ccr3 Reference to CCR3 value (output)
+ * @param angle_deg Electrical angle in degree
+ * @param ccr_max Maximum CCR value
+ * @param mod Modulation factor
+ */
+void calcExpCCRValues(uint16_t& ccr1, uint16_t& ccr2, uint16_t& ccr3,
+                      const double angle_deg, const uint16_t ccr_max = 1000u,
+                      const double mod = 1.0)
 {
   // Calculate sector angle
   const unsigned int sector = static_cast<unsigned int>(floor(angle_deg) / 60.0);
@@ -136,199 +148,96 @@ void calcCCRValues(uint16_t& ccr1, uint16_t& ccr2, uint16_t& ccr3,
 
 }
 
-TEST(SVMPWM, LUTValuePrecision)
+/**
+ * Test if class can be build and values are resetted to 0
+ */
+TEST(SVMHandler, Constructor)
 {
-  constexpr uint16_t NUM_VALUES = (1 << 8u);
-  constexpr uint16_t CCR_MAX = 1000;
+  SVMHandler<8, 1000> svm;
 
-  constexpr SVMPWMLUT<NUM_VALUES, CCR_MAX> lut = {};
+  CHECK_EQUAL(0.234375, svm.getAnglePrecision());
+  CHECK_EQUAL(0, svm.getElecAngle());
+  CHECK_EQUAL(0, svm.getSectorAngle());
+  CHECK_EQUAL(0, svm.getSector());
+  CHECK_EQUAL(0, svm.getCCRChn1());
+  CHECK_EQUAL(0, svm.getCCRChn2());
+  CHECK_EQUAL(0, svm.getCCRChn3());
+}
 
-  double angle = (M_PI / 3.0);
+/**
+ * Test if the move function calculates the angles
+ * correctly and if the overflow behavior is valid
+ */
+TEST(SVMHandler, MoveAngleBitPosP3)
+{
+  constexpr uint16_t BitPrecision = 3u;
+  constexpr uint16_t CCRMax = 1000;
+  constexpr uint32_t N = (1 << BitPrecision) * 16;
 
-  // Loop forward
-  for(auto idx = 0u; idx < NUM_VALUES; idx++)
-  { 
-    // Calculate ccr value with high prec
-    const double ccr_high_prec = static_cast<double>(CCR_MAX) * sin(angle);
+  SVMHandler<BitPrecision, CCRMax> svm;
 
-    // Round ccr values
-    const uint16_t ccr_calc = static_cast<uint16_t>(round(ccr_high_prec));
-
-    CHECK_EQUAL(ccr_calc, lut[idx]);
-
-    // Update angle
-    angle -= (60.0 / static_cast<double>(NUM_VALUES)) * (M_PI / 180.0);
-  }
-
-  // Loop backward
-  angle = 0.0;
-  for(auto idx = 0u; idx < NUM_VALUES; idx++)
+  double angle = 0.0;
+  for(auto idx = 0; idx < N; idx++)
   {
-    // Calculate ccr value with high prec
-    const double ccr_high_prec = static_cast<double>(CCR_MAX) * sin(angle);
+    const uint8_t   sector        = static_cast<uint8_t>(floor(angle / 60.0));
 
-    // Round ccr values
-    const uint16_t ccr_calc = static_cast<uint16_t>(round(ccr_high_prec));
+    CHECK_EQUAL(sector, svm.getSector());
 
-    CHECK_EQUAL(ccr_calc, lut[NUM_VALUES - idx]);
+    //printf("Angle: %f: Elec-Angle: %i Sec-Angle: %i Sector: %i\n",
+    //       static_cast<double>(idx) * svm.getAnglePrecision(),
+    //       svm.getElecAngle(), svm.getSectorAngle(), svm.getSector());
 
-    // Update angle
-    angle += (60.0 / static_cast<double>(NUM_VALUES)) * (M_PI / 180.0);
+    svm.move(1);
+    angle += svm.getAnglePrecision();
+
+    if(angle >= 360.0)  angle -= 360.0;
+    else if(angle < 0.0) angle += 360.0;
   }
 }
 
 /**
- * Test if all values (num angles, mask, etc.) are calculated correctly at
- * compile time.
+ * Test if the move function calculates the angles
+ * correctly and if the overflow behavior is valid
  */
-TEST(SVMPWM, ConstructorMaskDefault)
+TEST(SVMHandler, MoveAngleBitNegP3)
 {
-  SVMPWM<7, 1000> pwm0;
-  SVMPWM<8, 1000> pwm1;
-  SVMPWM<9, 1000> pwm2;
-  SVMPWM<10, 1000> pwm3;
+  constexpr uint16_t BitPrecision = 12u;
+  constexpr uint16_t CCRMax = 1000;
+  constexpr uint32_t N = (1 << BitPrecision) * 16;
 
-  CHECK_EQUAL(128, pwm0._num_angles);
-  CHECK_EQUAL(256, pwm1._num_angles);
-  CHECK_EQUAL(512, pwm2._num_angles);
-  CHECK_EQUAL(1024, pwm3._num_angles);
+  SVMHandler<BitPrecision, CCRMax> svm;
 
-  CHECK_EQUAL(7, pwm0._sec_bit_pos);
-  CHECK_EQUAL(8, pwm1._sec_bit_pos);
-  CHECK_EQUAL(9, pwm2._sec_bit_pos);
-  CHECK_EQUAL(10, pwm3._sec_bit_pos);
+  double angle = 0.0;
+  for(auto idx = 0; idx < N; idx++)
+  {
+    const uint8_t   sector        = static_cast<uint8_t>(floor(angle / 60.0));
 
-  CHECK_EQUAL(768, pwm0._angle_max);
-  CHECK_EQUAL(1536, pwm1._angle_max);
-  CHECK_EQUAL(3072, pwm2._angle_max);
-  CHECK_EQUAL(6144, pwm3._angle_max);
+    CHECK_EQUAL(sector, svm.getSector());
 
-  CHECK_EQUAL(0x7F, pwm0._sec_angle_mask);
-  CHECK_EQUAL(0xFF, pwm1._sec_angle_mask);
-  CHECK_EQUAL(0x1FF, pwm2._sec_angle_mask);
-  CHECK_EQUAL(0x3FF, pwm3._sec_angle_mask);
+    //printf("Angle: %f: Elec-Angle: %i Sec-Angle: %i Sector: %i\n",
+    //       static_cast<double>(idx) * svm.getAnglePrecision(),
+    //       svm.getElecAngle(), svm.getSectorAngle(), svm.getSector());
 
-  CHECK_EQUAL(0, pwm0._angle);
-  CHECK_EQUAL(0u, pwm0._actv_sec);
-  CHECK_EQUAL(0u, pwm0._sec_angle);
+    svm.move(-1);
+    angle -= svm.getAnglePrecision();
 
-  CHECK_EQUAL(0u, pwm0._ccr_chn1);
-  CHECK_EQUAL(0u, pwm0._ccr_chn2);
-  CHECK_EQUAL(0u, pwm0._ccr_chn3);
+    if(angle >= 360.0)  angle -= 360.0;
+    else if(angle < 0.0) angle += 360.0;
+  }
 }
+
 
 /**
- * Test if overflow works correctly
+ * Test if the values for the ccr registers are calculated correctly
+ * for every angle while driving in positive direction
  */
-TEST(SVMPWM, AngleOverflowQ8)
-{
-  SVMPWM<8, 1000> svm;
-
-  // Set elec angle to nearly max value
-  svm._angle = svm._angle_max - 2;
-
-  // Check if overflow occurs correctly
-  svm.move(1);
-  CHECK_EQUAL(1535, svm._angle);
-  CHECK_EQUAL(5, svm._actv_sec);
-  CHECK_EQUAL(255, svm._sec_angle);
-
-  svm.move(1);
-  CHECK_EQUAL(0, svm._angle);
-  CHECK_EQUAL(0, svm._actv_sec);
-  CHECK_EQUAL(0, svm._sec_angle);
-
-  // Check if ovverflow occurs correctly with high delta
-  svm._angle = svm._angle_max - 12;
-
-  svm.move(1);
-  CHECK_EQUAL(1525, svm._angle);
-  CHECK_EQUAL(5, svm._actv_sec);
-  CHECK_EQUAL(245, svm._sec_angle);
-
-  svm.move(20);
-  CHECK_EQUAL(9, svm._angle);
-  CHECK_EQUAL(0, svm._actv_sec);
-  CHECK_EQUAL(9, svm._sec_angle);
-}
-
-/**
- * Test if overflow works correctly
- */
-TEST(SVMPWM, AngleOverflowQ10)
-{
-  SVMPWM<10, 1000> svm;
-
-  // Set elec angle to nearly max value
-  svm._angle = svm._angle_max - 2;
-
-  // Check if overflow occurs correctly
-  svm.move(1);
-  CHECK_EQUAL(6143, svm._angle);
-  CHECK_EQUAL(5, svm._actv_sec);
-  CHECK_EQUAL(1023, svm._sec_angle);
-
-  svm.move(1);
-  CHECK_EQUAL(0, svm._angle);
-  CHECK_EQUAL(0, svm._actv_sec);
-  CHECK_EQUAL(0, svm._sec_angle);
-
-  // Check if ovverflow occurs correctly with high delta
-  svm._angle = svm._angle_max - 12;
-
-  svm.move(1);
-  CHECK_EQUAL(6133, svm._angle);
-  CHECK_EQUAL(5, svm._actv_sec);
-  CHECK_EQUAL(1013, svm._sec_angle);
-
-  svm.move(20);
-  CHECK_EQUAL(9, svm._angle);
-  CHECK_EQUAL(0, svm._actv_sec);
-  CHECK_EQUAL(9, svm._sec_angle);
-}
-
-/**
- * Test if underflow works correctly
- */
-TEST(SVMPWM, AngleUnderflowQ8)
-{
-  SVMPWM<8, 1000> svm;
-
-  // Set elec angle to nearly max value
-  svm._angle = 1;
-
-  // Check if overflow occurs correctly
-  svm.move(-1);
-  CHECK_EQUAL(0, svm._angle);
-  CHECK_EQUAL(0, svm._actv_sec);
-  CHECK_EQUAL(0, svm._sec_angle);
-
-  svm.move(-1);
-  CHECK_EQUAL(1535, svm._angle);
-  CHECK_EQUAL(5, svm._actv_sec);
-  CHECK_EQUAL(255, svm._sec_angle);
-
-  // Check if ovverflow occurs correctly with high delta
-  svm._angle = 10;
-
-  svm.move(-1);
-  CHECK_EQUAL(9, svm._angle);
-  CHECK_EQUAL(0, svm._actv_sec);
-  CHECK_EQUAL(9, svm._sec_angle);
-
-  svm.move(-20);
-  CHECK_EQUAL(1525, svm._angle);
-  CHECK_EQUAL(5, svm._actv_sec);
-  CHECK_EQUAL(245, svm._sec_angle);
-}
-
-TEST(SVMPWM, CCRCalculation)
+TEST(SVMHandler, CCRCalculation)
 {
   constexpr uint16_t PREC = 3;
   constexpr uint16_t CCR = 1000u;
   constexpr uint16_t NUM = (1u << PREC);
 
-  SVMPWM<PREC, CCR> svm;
+  SVMHandler<PREC, CCR> svm;
 
   const double delta_angle = (60.0 / static_cast<double>(NUM));
   double angle = 0.0;
@@ -336,7 +245,7 @@ TEST(SVMPWM, CCRCalculation)
   for(auto idx = 0u; idx < (NUM * 7); idx++)
   {
     uint16_t exp_ccr1 = 0, exp_ccr2 = 0, exp_ccr3 = 0;
-    calcCCRValues(exp_ccr1, exp_ccr2, exp_ccr3, angle, CCR, 1.0);
+    calcExpCCRValues(exp_ccr1, exp_ccr2, exp_ccr3, angle, CCR, 1.0);
 
     svm.update();
 
@@ -358,13 +267,17 @@ TEST(SVMPWM, CCRCalculation)
   }
 }
 
-TEST(SVMPWM, CCRCalculationNeg)
+/**
+ * Test if the values for the ccr registers are calculated correctly
+ * for every angle while driving in negative direction
+ */
+TEST(SVMHandler, CCRCalculationNeg)
 {
   constexpr uint16_t PREC = 4;
   constexpr uint16_t CCR = 1000u;
   constexpr uint16_t NUM = (1u << PREC);
 
-  SVMPWM<PREC, CCR> svm;
+  SVMHandler<PREC, CCR> svm;
 
   const double delta_angle = (60.0 / static_cast<double>(NUM));
   double angle = 0.0;
@@ -372,7 +285,7 @@ TEST(SVMPWM, CCRCalculationNeg)
   for(auto idx = 0u; idx < (NUM * 7); idx++)
   {
     uint16_t exp_ccr1 = 0, exp_ccr2 = 0, exp_ccr3 = 0;
-    calcCCRValues(exp_ccr1, exp_ccr2, exp_ccr3, angle, 1000, 1.0);
+    calcExpCCRValues(exp_ccr1, exp_ccr2, exp_ccr3, angle, 1000, 1.0);
 
     svm.update();
 
@@ -389,6 +302,11 @@ TEST(SVMPWM, CCRCalculationNeg)
 
   constexpr SVMLUTROM<8, 1000> rom_lut;
 }
+
+ /**
+  * @}
+  */ // SVMHandler
+/*--------------------------------------------------------------------------------*/
 
  /**
   * @}
