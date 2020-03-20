@@ -275,6 +275,12 @@ private:
   static constexpr std::size_t _num_frac_bits = NumFracBits;
 };
 
+
+/**
+ * @brief Default fixed point data type
+ */
+typedef QVariable<int32_t, 10u> fxp;
+
  /**
   * @}
   */ // Utils
