@@ -135,6 +135,33 @@ TEST(SVMLUT, ROMValuePrecision12BInc)
 }
 
 /**
+ * Test if getScaleA and getScaleB works correctly
+ */
+TEST(SVMLUT, ROMValueGetWeights)
+{
+  constexpr uint16_t BitPrecision = 12u;
+  constexpr uint16_t CCRMax = 1000u;
+
+  constexpr SVMLUTROM<BitPrecision, CCRMax> lut = {};
+
+  const double angle_step_rad = (60.0 / static_cast<double>(lut.getNumEntries() - 1)) 
+                                    * (M_PI / 180.0);
+
+  double angle_rad = 0.0;
+  for(auto idx = 0u; idx < lut.getNumEntries(); idx++)
+  {
+    const double exp_entry_a = round(static_cast<double>(CCRMax) * sin((M_PI/3.0) - angle_rad));
+    const double exp_entry_b = round(static_cast<double>(CCRMax) * sin(angle_rad));
+
+    CHECK_EQUAL(static_cast<uint16_t>(exp_entry_a), lut.getScaleA(idx));
+    CHECK_EQUAL(static_cast<uint16_t>(exp_entry_b), lut.getScaleB(idx));
+
+
+    angle_rad += angle_step_rad;
+  }
+}
+
+/**
  * Test if tables are compiling and number of entries is set correctly
  */
 TEST(SVMLUT, RAMConstructor)
@@ -144,6 +171,81 @@ TEST(SVMLUT, RAMConstructor)
 
   CHECK_EQUAL(257u, svm_lut_rom1.getNumEntries());
   CHECK_EQUAL(513u, svm_lut_rom2.getNumEntries());
+}
+
+/**
+ * Test if values in table with 8 bit precision are valid
+ */
+TEST(SVMLUT, RAMValuePrecision8BInc)
+{
+  constexpr uint16_t BitPrecision = 8u;
+  constexpr uint16_t CCRMax = 1000u;
+
+  const SVMLUTRAM<BitPrecision, CCRMax> lut = {};
+
+  const double angle_step_rad = (60.0 / static_cast<double>(lut.getNumEntries() - 1)) 
+                                    * (M_PI / 180.0);
+  
+  double angle_rad = (M_PI / 3.0);
+  for(auto idx = 0u; idx < lut.getNumEntries(); idx++)
+  {
+    const double exp_entry = round(static_cast<double>(CCRMax) * sin(angle_rad));
+
+    CHECK_EQUAL(static_cast<uint16_t>(exp_entry), lut[idx]);
+
+    angle_rad -= angle_step_rad;
+  }
+}
+
+/**
+ * Test if values in table with 12 bit precision are valid
+ */
+TEST(SVMLUT, RAMValuePrecision12BInc)
+{
+  constexpr uint16_t BitPrecision = 12u;
+  constexpr uint16_t CCRMax = 1000u;
+
+  const SVMLUTRAM<BitPrecision, CCRMax> lut = {};
+
+  const double angle_step_rad = (60.0 / static_cast<double>(lut.getNumEntries() - 1)) 
+                                    * (M_PI / 180.0);
+  
+  double angle_rad = (M_PI / 3.0);
+  for(auto idx = 0u; idx < lut.getNumEntries(); idx++)
+  {
+    const double exp_entry = round(static_cast<double>(CCRMax) * sin(angle_rad));
+
+    CHECK_EQUAL(static_cast<uint16_t>(exp_entry), lut[idx]);
+
+    angle_rad -= angle_step_rad;
+  }
+}
+
+/**
+ * Test if getScaleA and getScaleB works correctly
+ */
+TEST(SVMLUT, RAMValueGetWeights)
+{
+  constexpr uint16_t BitPrecision = 12u;
+  constexpr uint16_t CCRMax = 1000u;
+
+  const SVMLUTRAM<BitPrecision, CCRMax> lut = {};
+
+  const double angle_step_rad = (60.0 / static_cast<double>(lut.getNumEntries() - 1)) 
+                                    * (M_PI / 180.0);
+
+  double angle_rad = 0.0;
+  for(auto idx = 0u; idx < lut.getNumEntries(); idx++)
+  {
+    const double exp_entry_a = round(static_cast<double>(CCRMax) * sin((M_PI/3.0) - angle_rad));
+    const double exp_entry_b = round(static_cast<double>(CCRMax) * sin(angle_rad));
+
+    CHECK_EQUAL(static_cast<uint16_t>(exp_entry_a), lut.getScaleA(idx));
+    CHECK_EQUAL(static_cast<uint16_t>(exp_entry_b), lut.getScaleB(idx));
+
+
+    angle_rad += angle_step_rad;
+  }
 }
 
  /**

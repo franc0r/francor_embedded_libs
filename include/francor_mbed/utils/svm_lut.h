@@ -150,6 +150,15 @@ namespace francor_mbed
  * 
  * WARNING: Read data from ROM is very slow even in MCUs! Use SVMLUTRAM for fast access.
  * 
+ * As alternative you can use the get functions provided by the class. This will simplify the
+ * access of scale A and scale B with only one index!
+ * 
+ * ```
+ * const double m = 0.1;
+ * const double ccr_scale_a = static_cast<double>(lut_rom.getScaleA(5)) * m;
+ * const double ccr_scale_b = static_cast<double>(lut_rom.getScaleB(5)) * m;
+ * ```
+ * 
  */
 template<uint16_t BitPrecision = 8u, uint16_t CCRMax = 1000u>
 class SVMLUTROM
@@ -183,6 +192,22 @@ public:
    * @return const uint16_t Value stored in lookup table at desired index/angle
    */
   inline const uint16_t operator[] (const uint16_t idx) const {return _entry_list[idx];}
+
+  /**
+   * @brief Get scale/weight a from lookup table (idx 0 = 60° sin-value)
+   * 
+   * @param idx Index of entry directly related to angle
+   * @return const uint16_t Value stored in lookup table at desired index/angle
+   */
+  inline const uint16_t getScaleA(const uint16_t idx) const {return _entry_list[idx];}
+
+  /**
+   * @brief Get scale/weight b from lookup table (idx 0 = 0° sin-value)
+   * 
+   * @param idx Index of entry directly related to angle
+   * @return const uint16_t Value stored in lookup table at desired index/angle
+   */
+  inline const uint16_t getScaleB(const uint16_t idx) const {return _entry_list[_num_entries - 1 - idx];}
 
   /**
    * @brief Get the number of entries in the lookup table
@@ -240,6 +265,22 @@ public:
    * @return const uint16_t Value stored in lookup table at desired index/angle
    */
   inline const uint16_t operator[] (const uint16_t idx) const {return _entry_list[idx];}
+
+  /**
+   * @brief Get scale/weight a from lookup table (idx 0 = 60° sin-value)
+   * 
+   * @param idx Index of entry directly related to angle
+   * @return const uint16_t Value stored in lookup table at desired index/angle
+   */
+  inline const uint16_t getScaleA(const uint16_t idx) const {return _entry_list[idx];}
+
+  /**
+   * @brief Get scale/weight b from lookup table (idx 0 = 0° sin-value)
+   * 
+   * @param idx Index of entry directly related to angle
+   * @return const uint16_t Value stored in lookup table at desired index/angle
+   */
+  inline const uint16_t getScaleB(const uint16_t idx) const {return _entry_list[_num_entries - 1 - idx];}
 
   /**
    * @brief Get the number of entries in the lookup table
