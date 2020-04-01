@@ -147,6 +147,16 @@ namespace francor_mbed
  * relation to bit precision the variable just overflows and starts again at the angle
  * 0° if the limit is reached.
  * 
+ * The rotation or switching order by running in positive direction is as followed.
+ * The coding is as followed UVW = 001 (U - low, V - low and W - high):
+ * 
+ * -  0 0 1
+ * -  0 1 1
+ * -  0 1 0
+ * -  1 1 0
+ * -  1 0 0
+ * -  1 0 1
+ * 
  * Information: All functions are developed for a center aligned PWM mode. The advantage is
  * that you reduce the switching times of the MOSFETs.
  * Take care to config your PWM generator in Center-Aligned Mode! Means that the timer counter
@@ -201,6 +211,17 @@ public:
   SVMHandler()  {}
 
   /**
+   * @brief Set the electrical angle to the desired value
+   * 
+   * @param elec_angle [0; 2^8 * 6]
+   */
+  void setElecAngle(const int32_t elec_angle)
+  {
+    _elec_angle = elec_angle;
+    limitElecAngle();
+  }
+
+  /**
    * @brief Moves electrical angle by the desired increments
    * 
    * Moves the electrical angle by the desired increments with
@@ -210,22 +231,8 @@ public:
    */
   void move(const int16_t delta)
   {
-    // Calculate maximum allowed value for electrical angle
-    const int32_t elec_angle_max = static_cast<int32_t>((1u << BitPrecision) * 6);
-
     _elec_angle += static_cast<int32_t>(delta);
-
-    // Limit angle
-    if(_elec_angle >= elec_angle_max) {
-      _elec_angle -= elec_angle_max;
-    }
-    else if(_elec_angle < 0) {
-      _elec_angle += elec_angle_max;
-    }
-
-    // extract sector angle and sector
-    _sector_angle = static_cast<uint16_t>(_elec_angle & ((1u << BitPrecision) - 1));
-    _sector = static_cast<uint8_t>((_elec_angle >> BitPrecision) & 0x07);
+    limitElecAngle();
   }
 
   /**
@@ -279,6 +286,27 @@ public:
   const uint16_t  getCCRChn3() const {return _ccr_chn3;}
 
 private:
+
+  /**
+   * @brief Limitates the electrical angle and calculates sector and sector angle
+   */
+  void limitElecAngle(void)
+  {
+    // Calculate maximum allowed value for electrical angle
+    constexpr int32_t elec_angle_max = static_cast<int32_t>((1u << BitPrecision) * 6);
+
+    // Limit angle
+    if(_elec_angle >= elec_angle_max) {
+      _elec_angle -= elec_angle_max;
+    }
+    else if(_elec_angle < 0) {
+      _elec_angle += elec_angle_max;
+    }
+
+    // extract sector angle and sector
+    _sector_angle = static_cast<uint16_t>(_elec_angle & ((1u << BitPrecision) - 1));
+    _sector = static_cast<uint8_t>((_elec_angle >> BitPrecision) & 0x07);
+  }
 
     /**
    * @brief Assigns the calculated ccr weights to the correct ccr registers depending on
