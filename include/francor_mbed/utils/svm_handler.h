@@ -274,6 +274,38 @@ public:
     calculateCCRChnValues(ccr_a, ccr_b, ccr_0);
   }
 
+  /**
+   * @brief Updates the handler
+   * 
+   * Overloaded function see first implementation
+   * 
+   * @param m Modulation factor [0.0; 1.0]
+   */
+  void update(const float m = 1.0)
+  {
+    // Scale ccr values with modulation factor
+    const float f_ccr_a = static_cast<float>(_lut.getScaleA(_sector_angle)) * m;
+    const float f_ccr_b = static_cast<float>(_lut.getScaleB(_sector_angle)) * m;
+
+    // Convert back to normal representation
+    const uint16_t ccr_a = static_cast<uint16_t>(static_cast<int32_t>(f_ccr_a));
+    const uint16_t ccr_b = static_cast<uint16_t>(static_cast<int32_t>(f_ccr_b));
+
+    // Calculate CCR0 value
+    int32_t ccr_0 = static_cast<int32_t>(CCRMax) - static_cast<int>(ccr_a) - static_cast<int>(ccr_b);
+
+    // Check if ccr 0 is smaller than 0 (limit value)
+    if(ccr_0 < 0) {
+      ccr_0 = 0;
+    }
+    else {
+      // Due to center PWM generation divide value by 2
+      ccr_0 = ((ccr_0 + 1) >> 1u);
+    }
+
+    calculateCCRChnValues(ccr_a, ccr_b, ccr_0);
+  }
+
   /** Getters **/
   const double    getAnglePrecision() const {return _angle_precision;}
 

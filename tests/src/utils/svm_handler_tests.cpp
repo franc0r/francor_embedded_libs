@@ -247,7 +247,7 @@ TEST(SVMHandler, CCRCalculation)
     uint16_t exp_ccr1 = 0, exp_ccr2 = 0, exp_ccr3 = 0;
     calcExpCCRValues(exp_ccr1, exp_ccr2, exp_ccr3, angle, CCR, 1.0);
 
-    svm.update();
+    svm.update(fxp(1.0));
 
     CHECK_EQUAL(exp_ccr1, svm.getCCRChn1());
     CHECK_EQUAL(exp_ccr2, svm.getCCRChn2());
@@ -287,7 +287,7 @@ TEST(SVMHandler, CCRCalculationNeg)
     uint16_t exp_ccr1 = 0, exp_ccr2 = 0, exp_ccr3 = 0;
     calcExpCCRValues(exp_ccr1, exp_ccr2, exp_ccr3, angle, 1000, 1.0);
 
-    svm.update();
+    svm.update(fxp(1.0));
 
     CHECK_EQUAL(exp_ccr1, svm.getCCRChn1());
     CHECK_EQUAL(exp_ccr2, svm.getCCRChn2());
